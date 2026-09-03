@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /participants
+Disallow: /walk-in
+Disallow: /check-in
+Disallow: /badge
+Disallow: /reports
+Disallow: /staff
+Disallow: /audit
+Disallow: /settings

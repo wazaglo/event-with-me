@@ -1,0 +1,80 @@
+name: Deploy Lambda Code
+
+on:
+  push:
+    branches: [main, dvlp]
+    paths:
+      - "backend/**/*.mjs"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix:
+        function:
+          - { name: createEvent-prod, file: backend/events/createEvent.mjs }
+          - { name: listEvents-prod, file: backend/events/listEvents.mjs }
+          - { name: updateEvent-prod, file: backend/events/updateEvent.mjs }
+          - { name: getEvent-prod, file: backend/events/getEvent.mjs }
+          - { name: deleteEvent-prod, file: backend/events/deleteEvent.mjs }
+          - { name: registerParticipant-prod, file: backend/registrations/registerParticipant.mjs }
+          - { name: listRegistrations-prod, file: backend/registrations/listRegistrations.mjs }
+          - { name: getRegistrations-prod, file: backend/registrations/getRegistrations.mjs }
+          - { name: deleteRegistration-prod, file: backend/registrations/deleteRegistration.mjs }
+          - { name: checkIn-prod, file: backend/registrations/checkIn.mjs }
+          - { name: walkInRegistration-prod, file: backend/registrations/walkInRegistration.mjs }
+          - { name: updateRegistration-prod, file: backend/registrations/updateRegistration.mjs }
+          - { name: printBadge-prod, file: backend/registrations/printBadge.mjs }
+          - { name: getAuditLog-prod, file: backend/registrations/getAuditLog.mjs }
+          - { name: ticketProcessing-prod, file: backend/registrations/ticketProcessing.mjs }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Zip and deploy ${{ matrix.function.name }}
+        run: |
+          mkdir -p /tmp/function/shared
+          cp ${{ matrix.function.file }} /tmp/function/
+          cp backend/shared/*.mjs /tmp/function/shared/
+          cd /tmp/function
+          zip -r /tmp/deploy.zip .
+          aws lambda update-function-code \
+            --function-name ${{ matrix.function.name }} \
+            --zip-file fileb:///tmp/deploy.zip
+          aws lambda wait function-updated \
+            --function-name ${{ matrix.function.name }}
+          aws lambda update-function-configuration \
+            --function-name ${{ matrix.function.name }} \
+            --environment "Variables={\
+              ALLOWED_ORIGIN=${{ secrets.ALLOWED_ORIGIN }},\
+              EVENTS_TABLE=events-prod,\
+              REGISTRATIONS_TABLE=registrations-prod,\
+              AUDIT_TABLE=audit-logs-prod,\
+              REGISTRATION_QUEUE_URL=https://sqs.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ACCOUNT_ID }}/registration-queue-prod,\
+              SES_SOURCE_EMAIL=${{ secrets.SES_SOURCE_EMAIL }},\
+              SNS_TOPIC_ARN=arn:aws:sns:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:event-confirmations-prod,\
+              SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}\
+            }"
