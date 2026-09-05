@@ -2,8 +2,8 @@
 
 A fully serverless AWS-native event registration and ticketing system that replaces a manual Microsoft Forms + Excel workflow. The system has two distinct user-facing surfaces:
 
-- **Public registration portal** — attendees self-register for events
-- **Coordinator console** — staff manage events, check in attendees, print badges, and run reports
+- **Public registration portal**: attendees self-register for events
+- **Coordinator console**: staff manage events, check in attendees, print badges, and run reports
 
 ---
 
@@ -17,7 +17,7 @@ CI/CD: push `backend/**/*.mjs` → GitHub Actions runs Jest tests and updates al
 
 ## Layer-by-Layer Technical Breakdown
 
-### 1. Frontend — React/TanStack Start on Amplify
+### 1. Frontend: React/TanStack Start on Amplify
 
 The frontend is a Single Page Application built with TanStack Start (React 19 + Vite). It is deployed as static files to AWS Amplify Hosting.
 
@@ -26,7 +26,7 @@ The frontend is a Single Page Application built with TanStack Start (React 19 + 
 - On sign-in, Cognito returns 3 tokens: **ID token**, **Access token**, **Refresh token**
 - The ID token is a JWT stored in `localStorage` via the Cognito SDK
 - Every API call attaches it as `Authorization: Bearer <idToken>`
-- The JWT payload contains `cognito:groups` — the frontend reads this to determine role (`Admin`, `RegistrationOfficer`, `CheckinOfficer`) and shows/hides nav items accordingly
+- The JWT payload contains `cognito:groups` - the frontend reads this to determine role (`Admin`, `RegistrationOfficer`, `CheckinOfficer`) and shows/hides nav items accordingly
 - `src/lib/hooks/use-auth.ts` exposes `isAdmin`, `isRegOfficer`, `isCheckinOfficer` booleans derived from the token groups
 
 **How data flows:**
@@ -41,7 +41,7 @@ The frontend is a Single Page Application built with TanStack Start (React 19 + 
 
 ---
 
-### 2. Authentication — AWS Cognito
+### 2. Authentication: AWS Cognito
 
 Cognito is the identity layer for all coordinator staff. Attendees do not need accounts.
 
@@ -87,10 +87,10 @@ Browser                    Cognito
 A REST API (not HTTP API) is used because it supports the Cognito Authorizer natively.
 
 **Key design decisions:**
-- `GET /events` and `POST /events/{eventId}/register` have `Auth: NONE` — public endpoints for attendees
+- `GET /events` and `POST /events/{eventId}/register` have `Auth: NONE` - public endpoints for attendees
 - All other endpoints require a valid Cognito JWT
 - CORS is configured at the API level to allow `*` origin (tighten to the Amplify domain in production)
-- Each endpoint maps 1:1 to a Lambda function — no shared handler routing
+- Each endpoint maps 1:1 to a Lambda function. NOshared handler routing
 
 ---
 
@@ -120,7 +120,7 @@ API Gateway event
 6. Return standardised JSON response
 ```
 
-**IAM permissions** — each Lambda has the minimum required DynamoDB policy:
+**IAM permissions** - each Lambda has the minimum required DynamoDB policy:
 - Read-only Lambdas → `DynamoDBReadPolicy`
 - Write Lambdas → `DynamoDBCrudPolicy`
 - Only `registerParticipant` has `SNSPublishMessagePolicy`
@@ -129,7 +129,7 @@ API Gateway event
 
 ### 5. DynamoDB
 
-Three tables, all using PAY_PER_REQUEST billing (free tier friendly, no capacity planning needed).
+Three tables, all using PAY_PER_REQUEST billing (free tier friendly. NOcapacity planning needed).
 
 **Events table: tbl_events**
 ```
@@ -170,11 +170,11 @@ Attributes: action, entity, entityId, actorId, actorLabel,
 
 ---
 
-### 6. SNS — Confirmation Emails
+### 6. SNS: Confirmation Emails
 
 When `registerParticipant` runs successfully, it publishes a JSON message to the SNS topic `event-confirmations-prod` containing the attendee's name, email, registration number, event name, date and venue.
 
-> The topic exists but has no subscriber yet — a confirmation email Lambda needs to be built and subscribed (see Step 5 in the setup checklist below).
+> The topic exists but has no subscriber yet, a confirmation email Lambda needs to be built and subscribed (see Step 5 in the setup checklist below).
 
 ---
 
@@ -186,7 +186,7 @@ A `$10/month` budget is defined. When actual spend exceeds 80% ($0.80), it publi
 
 ---
 
-### 9. CI/CD Pipeline — GitHub Actions
+### 9. CI/CD Pipeline: GitHub Actions
 
 ```
 Push to dvlp/main (backend/**/*.mjs)
@@ -206,13 +206,13 @@ Job 2: deploy
   - Output result to GitHub Actions summary
 ```
 
-Frontend deployment is handled entirely by Amplify — it watches the GitHub repo independently and deploys on every push to `main`.
+Frontend deployment is handled entirely by Amplify, it watches the GitHub repo independently and deploys on every push to `main`.
 
 ---
 
 ## First-Time Setup
 
-### Step 1 — AWS Account & IAM
+### Step 1: AWS Account & IAM
 
 Create a dedicated IAM user for GitHub Actions deployments:
 
@@ -235,7 +235,7 @@ AWS_REGION            = us-east-1
 
 ---
 
-### Step 2 — Create the First Admin User
+### Step 2: Create the First Admin User
 
 ```bash
 aws cognito-idp admin-create-user \
@@ -254,7 +254,7 @@ The admin signs in at `/auth` and is prompted by Cognito to set a permanent pass
 
 ---
 
-### Step 3 — Connect AWS Amplify Hosting
+### Step 3: Connect AWS Amplify Hosting
 
 ```
 AWS Console → Amplify → New app → Host web app
@@ -275,7 +275,7 @@ Get these values from the AWS Console:
 
 ---
 
-### Step 4 — Activate Confirmation Emails (SQS , SES)
+### Step 4: Activate Confirmation Emails (SQS, SES)
 
 **5a. Verify a sender email in SES:**
 ```
@@ -293,13 +293,13 @@ AWS Console → SES → Verified identities → Create identity
 
 ---
 
-### Step 6 — Tighten IAM Permissions
+### Step 6: Tighten IAM Permissions
 
 Replace `AdministratorAccess` on the GitHub Actions IAM user with a scoped policy covering only Lambda, API Gateway, DynamoDB, Cognito, SNS, IAM, and Budgets.
 
 ---
 
-### Step 7 — Custom Domain
+### Step 7: Custom Domain
 
 ```
 AWS Console → Amplify → your app → Domain management
