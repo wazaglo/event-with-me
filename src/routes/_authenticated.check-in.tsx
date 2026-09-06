@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/check-in")({
-  head: () => ({ meta: [{ title: "Check-in — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Check-in - Summit Console" }] }),
   component: CheckInPage,
 });
 

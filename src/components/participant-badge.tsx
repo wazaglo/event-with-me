@@ -26,7 +26,7 @@ interface Props {
 }
 
 /**
- * Conference badge — physical 100mm x 60mm landscape (XPrinter XP-DT427B).
+ * Conference badge - physical 100mm x 60mm landscape (XPrinter XP-DT427B).
  * Renders identically on screen (mm units) and printed page.
  */
 export const ParticipantBadge = forwardRef<HTMLDivElement, Props>(function ParticipantBadge(

@@ -27,7 +27,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated/walk-in")({
-  head: () => ({ meta: [{ title: "Walk-in registration — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Walk-in registration - Summit Console" }] }),
   ssr: false,
   beforeLoad: async () => {
     const session = await getSession();
@@ -81,7 +81,7 @@ function WalkInPage() {
 
       // Admins and Registration Officers go straight to badge print
       if (staff.isAdmin || staff.isRegOfficer) {
-        toast.success(`Registered ${data.registrationNumber} — opening badge…`);
+        toast.success(`Registered ${data.registrationNumber} - opening badge…`);
         navigate({ to: "/badge/$id", params: { id: data.registrationId } });
       }
     } catch (e) {
@@ -140,7 +140,7 @@ function WalkInPage() {
       <div>
         <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Reception</div>
         <h1 className="mt-1 text-3xl font-bold">Register walk-in</h1>
-        <p className="mt-1 text-muted-foreground">Fast entry — press Tab between fields and Enter to submit.</p>
+        <p className="mt-1 text-muted-foreground">Fast entry - press Tab between fields and Enter to submit.</p>
       </div>
 
       {events.length > 1 && (

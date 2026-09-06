@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Dashboard - Summit Console" }] }),
   component: Dashboard,
 });
 

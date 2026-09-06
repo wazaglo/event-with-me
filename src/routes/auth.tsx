@@ -31,7 +31,7 @@ const newPasswordSchema = z.object({
 });
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Staff sign in — Summit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Staff sign in - Summit" }, { name: "robots", content: "noindex" }] }),
   component: AuthPage,
 });
 
@@ -77,7 +77,7 @@ function AuthPage() {
       try {
         const v = values as unknown as { password: string };
         await completeNewPassword(v.password);
-        toast.success("Password set — welcome!");
+        toast.success("Password set - welcome!");
         navigate({ to: "/dashboard", replace: true });
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Password change failed");
@@ -97,7 +97,7 @@ function AuthPage() {
             {settings?.name ?? "Event Registration System"}
           </h1>
           <p className="mt-4 max-w-md text-white/85">
-            Coordinator console — register walk-ins, check delegates in, and print badges on arrival.
+            Coordinator console - register walk-ins, check delegates in, and print badges on arrival.
           </p>
         </div>
         <div className="text-xs text-white/70">Powered by AWS</div>

@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { getSession } from "@/lib/auth/cognito-client";
 
 export const Route = createFileRoute("/_authenticated/events")({
-  head: () => ({ meta: [{ title: "Events — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Events - Summit Console" }] }),
   ssr: false,
   beforeLoad: async () => {
     const session = await getSession();

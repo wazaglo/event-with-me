@@ -58,7 +58,7 @@ export function clearStoredReg(eventId: string) {
 export const Route = createFileRoute("/register/")({
   head: () => ({
     meta: [
-      { title: "Register — Summit Registration" },
+      { title: "Register - Summit Registration" },
       { name: "description", content: "Register for the event." },
     ],
   }),
@@ -190,7 +190,7 @@ function RegisterPage() {
             {closed ? (
               <div className="mt-8 rounded-lg border border-accent/50 bg-accent/15 p-4 text-sm">
                 <p className="font-medium">
-                  {activeEvent?.name ?? "This event"} — registration is currently closed.
+                  {activeEvent?.name ?? "This event"} - registration is currently closed.
                 </p>
                 {activeEvent?.date && (
                   <p className="mt-1 text-muted-foreground">

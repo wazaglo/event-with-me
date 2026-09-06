@@ -20,7 +20,7 @@ import {
 import { useCurrentStaff } from "@/lib/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/participants")({
-  head: () => ({ meta: [{ title: "Participants — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Participants - Summit Console" }] }),
   component: ParticipantsPage,
 });
 

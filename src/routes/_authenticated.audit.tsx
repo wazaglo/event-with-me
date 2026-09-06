@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { getSession } from "@/lib/auth/cognito-client";
 
 export const Route = createFileRoute("/_authenticated/audit")({
-  head: () => ({ meta: [{ title: "Audit log — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Audit log - Summit Console" }] }),
   ssr: false,
   beforeLoad: async () => {
     const session = await getSession();
@@ -58,11 +58,11 @@ function AuditPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3">{a.actorLabel ?? <span className="text-muted-foreground">system</span>}</td>
-                    <td className="px-4 py-3">{a.meta?.name ?? <span className="text-muted-foreground">—</span>}</td>
-                    <td className="px-4 py-3">{a.meta?.email ?? <span className="text-muted-foreground">—</span>}</td>
-                    <td className="px-4 py-3">{a.meta?.phone ?? <span className="text-muted-foreground">—</span>}</td>
+                    <td className="px-4 py-3">{a.meta?.name ?? <span className="text-muted-foreground">-</span>}</td>
+                    <td className="px-4 py-3">{a.meta?.email ?? <span className="text-muted-foreground">-</span>}</td>
+                    <td className="px-4 py-3">{a.meta?.phone ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {a.entity ?? "—"}{a.entityId ? ` · ${a.entityId.slice(0, 8)}` : ""}
+                      {a.entity ?? "-"}{a.entityId ? ` · ${a.entityId.slice(0, 8)}` : ""}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}

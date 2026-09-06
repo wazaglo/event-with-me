@@ -8,7 +8,7 @@ import { useEvents } from "@/components/logo";
 
 export const Route = createFileRoute("/register/success/$reg")({
   head: () => ({
-    meta: [{ title: "Registration complete — Summit" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Registration complete - Summit" }, { name: "robots", content: "noindex" }],
   }),
   component: SuccessPage,
 });
@@ -46,7 +46,7 @@ function SuccessPage() {
               </div>
               <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Registration complete</div>
             </div>
-            <h1 className="mt-4 text-3xl font-bold md:text-4xl">You're in — enjoy your stay.</h1>
+            <h1 className="mt-4 text-3xl font-bold md:text-4xl">You're in - enjoy your stay.</h1>
             <p className="mt-2 max-w-xl text-white/85">
               Keep your registration number handy. Show it at the reception desk to collect your badge.
             </p>

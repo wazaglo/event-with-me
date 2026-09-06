@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getSession } from "@/lib/auth/cognito-client";
 
 export const Route = createFileRoute("/_authenticated/staff")({
-  head: () => ({ meta: [{ title: "Staff — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Staff - Summit Console" }] }),
   ssr: false,
   beforeLoad: async () => {
     const session = await getSession();
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/staff")({
 });
 
 const groupLabels: Record<string, { label: string; description: string }> = {
-  Admin: { label: "Administrator", description: "Full access — events, staff, reports, settings, audit" },
+  Admin: { label: "Administrator", description: "Full access - events, staff, reports, settings, audit" },
   RegistrationOfficer: { label: "Registration Officer", description: "Walk-in registration and participant management" },
   CheckinOfficer: { label: "Check-in Officer", description: "Check-in and limited walk-in access" },
 };
@@ -37,13 +37,13 @@ function StaffPage() {
         </div>
         <p className="text-sm text-muted-foreground">
           Staff accounts are managed directly in the <strong>AWS Cognito User Pool</strong>.
-          A staff management API is on the roadmap — for now use the AWS Console or CLI below.
+          A staff management API is on the roadmap - for now use the AWS Console or CLI below.
         </p>
         <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-2">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Add a staff member</div>
           <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground">
             <li>AWS Console → <strong>Cognito → User Pools → event-with-me-prod</strong></li>
-            <li>Click <strong>Create user</strong> — enter email + temporary password</li>
+            <li>Click <strong>Create user</strong> - enter email + temporary password</li>
             <li>Go to <strong>Groups</strong> → add user to the appropriate group below</li>
           </ol>
         </div>

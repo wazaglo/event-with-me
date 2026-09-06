@@ -49,7 +49,7 @@ Cognito is the identity layer for all coordinator staff. Attendees do not need a
 ```
 Cognito User Pool: event-with-me-prod
   │
-  ├── Users (staff accounts — email + password)
+  ├── Users (staff accounts - email + password)
   │
   └── Groups
         ├── Admin               → full system access
@@ -314,7 +314,7 @@ AWS Console → Amplify → your app → Domain management
 
 | Group | Access |
 |---|---|
-| `Admin` | Full access — events, staff, reports, settings, audit |
+| `Admin` | Full access - events, staff, reports, settings, audit |
 | `RegistrationOfficer` | Walk-in registration, participants |
 | `CheckinOfficer` | Check-in, walk-in (limited) |
 

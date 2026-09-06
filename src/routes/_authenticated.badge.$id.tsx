@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const searchSchema = z.object({ auto: z.string().optional() });
 
 export const Route = createFileRoute("/_authenticated/badge/$id")({
-  head: () => ({ meta: [{ title: "Print badge — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Print badge - Summit Console" }] }),
   validateSearch: (s) => searchSchema.parse(s),
   component: BadgePage,
 });

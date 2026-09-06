@@ -93,7 +93,7 @@ export async function handler(event) {
       ? new Date(eventDate).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
       : "To be announced";
 
-    const subject = `Registration confirmed — ${eventName}`;
+    const subject = `Registration confirmed - ${eventName}`;
     const textBody = [
       `Hi ${fullName},`,
       ``,
@@ -103,7 +103,7 @@ export async function handler(event) {
       `Date: ${dateStr}`,
       `Venue: ${venue ?? "To be announced"}`,
       ``,
-      `Keep your registration number handy — show it at reception to collect your badge.`,
+      `Keep your registration number handy - show it at reception to collect your badge.`,
       ``,
       `See you there!`,
     ].join("\n");

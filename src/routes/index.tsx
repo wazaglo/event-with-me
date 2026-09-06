@@ -117,7 +117,7 @@ function Landing() {
           <DetailBlock label="Venue" value={venue} icon={MapPin} />
           <DetailBlock
             label="Registration"
-            value={settings?.registrationOpen === false ? "Currently closed" : "Open — register today"}
+            value={settings?.registrationOpen === false ? "Currently closed" : "Open - register today"}
             icon={Ticket}
           />
         </div>

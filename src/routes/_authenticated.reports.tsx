@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getSession } from "@/lib/auth/cognito-client";
 
 export const Route = createFileRoute("/_authenticated/reports")({
-  head: () => ({ meta: [{ title: "Reports — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Reports - Summit Console" }] }),
   ssr: false,
   beforeLoad: async () => {
     const session = await getSession();

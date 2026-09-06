@@ -38,7 +38,7 @@ const settingsSchema = z.object({
 type SettingsForm = z.infer<typeof settingsSchema>;
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Event settings — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Event settings - Summit Console" }] }),
   ssr: false,
   beforeLoad: async () => {
     const session = await getSession();

@@ -1,4 +1,4 @@
-// DynamoDB singleton — shared across all Lambda invocations
+// DynamoDB singleton - shared across all Lambda invocations
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 

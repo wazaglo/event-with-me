@@ -22,7 +22,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated/participants/$id")({
-  head: () => ({ meta: [{ title: "Participant — Summit Console" }] }),
+  head: () => ({ meta: [{ title: "Participant - Summit Console" }] }),
   component: ParticipantDetail,
 });
 

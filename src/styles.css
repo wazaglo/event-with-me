@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Summit Registration & Check-in — Design System
+ * Summit Registration & Check-in - Design System
  * Deep green primary (#00655b), warm gold accent (#ffd400), cream surface.
  * All tokens are semantic. Never hardcode colors in components.
  */
@@ -171,7 +171,7 @@
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
 
 /* ============================================================
-   BADGE PRINT — 100mm x 60mm landscape, XPrinter XP-DT427B
+   BADGE PRINT - 100mm x 60mm landscape, XPrinter XP-DT427B
    ============================================================ */
 .badge-card {
   width: 100mm;
