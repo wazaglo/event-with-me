@@ -13,10 +13,11 @@ os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")
 os.environ.setdefault("EVENTS_TABLE", "events-test")
 os.environ.setdefault("REGISTRATIONS_TABLE", "registrations-test")
 os.environ.setdefault("AUDIT_TABLE", "audit-test")
+os.environ.setdefault("SES_SOURCE_EMAIL", "noreply@example.com")
 
 # Handler modules import `shared.*` (backend/) and sit at the zip root
 # (backend/events, backend/registrations) — mirror the lambda layout.
-for p in (BACKEND / "events", BACKEND / "registrations", BACKEND):
+for p in (BACKEND / "events", BACKEND / "registrations", BACKEND / "notifications", BACKEND):
     sp = str(p)
     if sp not in sys.path:
         sys.path.insert(0, sp)

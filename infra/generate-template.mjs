@@ -178,16 +178,50 @@ const data = {
       Type: "AWS::SNS::Topic",
       Properties: { TopicName: sub(`${BASE}-confirmations`) },
     },
+    // Dead-letter for confirmation messages the email Lambda keeps failing
+    // on (e.g. SES rejects the recipient); inspect and replay manually.
+    ConfirmationDLQ: {
+      Type: "AWS::SQS::Queue",
+      Properties: { QueueName: sub(`${BASE}-confirmations-dlq`), MessageRetentionPeriod: 1209600 },
+    },
+    ConfirmationDLQPolicy: {
+      Type: "AWS::SQS::QueuePolicy",
+      Properties: {
+        Queues: [ref("ConfirmationDLQ")],
+        PolicyDocument: {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Principal: { Service: "sns.amazonaws.com" },
+              Action: "sqs:SendMessage",
+              Resource: getAtt("ConfirmationDLQ", "Arn"),
+              Condition: {
+                ArnEquals: { "aws:SourceArn": sub(`arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:${BASE}-confirmations`) },
+              },
+            },
+          ],
+        },
+      },
+    },
   },
   Outputs: {
     EventsTable: exported(ref("EventsTable"), "data-EventsTable"),
     RegistrationsTable: exported(ref("RegistrationsTable"), "data-RegistrationsTable"),
     AuditTable: exported(ref("AuditTable"), "data-AuditTable"),
     ConfirmationTopicArn: exported(ref("ConfirmationTopic"), "data-ConfirmationTopicArn"),
+    ConfirmationDLQArn: exported(getAtt("ConfirmationDLQ", "Arn"), "data-ConfirmationDLQArn"),
   },
 };
 
 // ─── lambdas.yaml ────────────────────────────────────────────────────────────
+// The confirmation-email function consumes the SNS topic instead of serving
+// an API route, so it gets its own resource block (not in FUNCS).
+const EMAIL_FUNC = {
+  id: "SendConfirmationEmail",
+  file: "backend/notifications/sendConfirmationEmail.py",
+};
+
 // Fn::ImportValue is not allowed inside IAM policy documents, but the table
 // names are deterministic (BASE-*) so the role scopes them via Fn::Sub ARNs.
 const TABLE_ARN = (suffix) =>
@@ -288,6 +322,121 @@ for (const f of FUNCS) {
   lambdaOutputs[`${f.id}Arn`] = exported(getAtt(`${f.id}Function`, "Arn"), `lambdas-${f.id}Arn`);
 }
 
+// ─── confirmation email (SNS -> SES) ────────────────────────────────────────
+// Separate role from the shared LambdaRole (least privilege): this function
+// only sends mail from the verified identity, stamps emailSentAt on the
+// registration it just emailed, and unsubscribes removed attendee emails.
+const emailRole = {
+  Type: "AWS::IAM::Role",
+  Properties: {
+    RoleName: sub(`${BASE}-email-role`),
+    AssumeRolePolicyDocument: {
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Principal: { Service: "lambda.amazonaws.com" },
+          Action: "sts:AssumeRole",
+        },
+      ],
+    },
+    ManagedPolicyArns: ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"],
+    Policies: [
+      {
+        PolicyName: "ses-send",
+        PolicyDocument: {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Action: ["ses:SendEmail", "ses:SendRawEmail"],
+              Resource: sub(`arn:aws:ses:\${AWS::Region}:\${AWS::AccountId}:identity/*`),
+            },
+          ],
+        },
+      },
+      {
+        PolicyName: "registration-stamp",
+        PolicyDocument: {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Action: "dynamodb:UpdateItem",
+              Resource: REG_TABLE_ARN,
+            },
+          ],
+        },
+      },
+      {
+        PolicyName: "topic-unsubscribe",
+        PolicyDocument: {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Action: ["sns:Unsubscribe", "sns:ListSubscriptionsByTopic"],
+              Resource: TOPIC_ARN,
+            },
+          ],
+        },
+      },
+    ],
+  },
+};
+
+lambdaResources.EmailRole = emailRole;
+lambdaResources[`${EMAIL_FUNC.id}Function`] = {
+  Type: "AWS::Lambda::Function",
+  DependsOn: ["EmailRole"],
+  Properties: {
+    FunctionName: `${BASE}-${EMAIL_FUNC.id}`,
+    Runtime: "python3.13",
+    Architectures: ["x86_64"],
+    Handler: "sendConfirmationEmail.handler",
+    Role: getAtt("EmailRole", "Arn"),
+    Timeout: 30,
+    MemorySize: 256,
+    Code: {
+      S3Bucket: ref("CodeBucket"),
+      S3Key: codeKey("sendConfirmationEmail"),
+    },
+    Environment: {
+      Variables: {
+        REGISTRATIONS_TABLE: imp("data-RegistrationsTable"),
+        AUDIT_TABLE: imp("data-AuditTable"),
+        // SES refuses mail from an unverified identity, so this is a hard
+        // requirement for the email path; override with a verified sender.
+        SES_SOURCE_EMAIL: ref("SourceEmail"),
+      },
+    },
+  },
+};
+lambdaResources.EmailInvokePermission = {
+  Type: "AWS::Lambda::Permission",
+  Properties: {
+    Action: "lambda:InvokeFunction",
+    FunctionName: getAtt(`${EMAIL_FUNC.id}Function`, "Arn"),
+    Principal: "sns.amazonaws.com",
+    SourceArn: imp("data-ConfirmationTopicArn"),
+  },
+};
+lambdaResources.EmailSubscription = {
+  Type: "AWS::SNS::Subscription",
+  Properties: {
+    TopicArn: imp("data-ConfirmationTopicArn"),
+    Protocol: "lambda",
+    Endpoint: getAtt(`${EMAIL_FUNC.id}Function`, "Arn"),
+    RedrivePolicy: {
+      deadLetterTargetArn: imp("data-ConfirmationDLQArn"),
+    },
+  },
+};
+lambdaOutputs[`${EMAIL_FUNC.id}Arn`] = exported(
+  getAtt(`${EMAIL_FUNC.id}Function`, "Arn"),
+  `lambdas-${EMAIL_FUNC.id}Arn`,
+);
+
 const lambdas = {
   ...header("compute (Lambda functions)"),
   Parameters: {
@@ -304,6 +453,11 @@ const lambdas = {
       Type: "String",
       Default: "*",
       Description: "CORS origin injected into Lambda responses",
+    },
+    SourceEmail: {
+      Type: "String",
+      Default: "noreply@azubisuccess.space",
+      Description: "Verified SES sender identity for confirmation emails",
     },
   },
   Resources: lambdaResources,

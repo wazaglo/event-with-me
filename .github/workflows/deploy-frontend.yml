@@ -36,8 +36,6 @@ jobs:
           aws-region: us-east-1
 
       - run: bun install --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: "true"
 
       - name: Lint and typecheck
         run: |
@@ -54,30 +52,30 @@ jobs:
 
       - name: Upload dist to Amplify
         run: |
-          # ZIP flow: client generates an AES key/IV, create-deployment returns
-          # a pre-signed upload URL, PUT the zip, then start-deployment.
-          # Bundle = prebuilt dist/ + amplify-deploy.yml renamed to amplify.yml
-          # (tells Amplify the bundle needs no build).
-          bundle="$(mktemp -d)"
-          cp -r dist "$bundle/dist"
-          cp amplify-deploy.yml "$bundle/amplify.yml"
-          (cd "$bundle" && zip -qr "$GITHUB_WORKSPACE/amplify-deploy.zip" .)
-          key="$(openssl rand -base64 32)"
-          iv="$(openssl rand -base64 16)"
-          keyhex="$(echo -n "$key" | base64 -d | xxd -p | tr -d '\n')"
-          ivhex="$(echo -n "$iv" | base64 -d | xxd -p | tr -d '\n')"
+          # Manual ZIP deploy: Amplify serves the ZIP ROOT as the web root, so
+          # the bundle contains dist/'s contents at top level (index.html,
+          # assets/, ...), not a dist/ subdirectory.
+          (cd dist && zip -qr "$GITHUB_WORKSPACE/amplify-deploy.zip" .)
           resp="$(aws amplify create-deployment \
             --app-id d2378xfhyngm6g \
-            --branch-name main \
-            --file-encrypt-key "$key" \
-            --file-encrypt-iv "$iv")"
-          upload_url="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["uploadUrl"])')"
-          file_key="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["fileKey"])')"
-          # Amplify decrypts the artifact server-side with the key/IV above,
-          # so the upload must be AES-256-CBC ciphertext (same as amplify CLI).
-          openssl enc -aes-256-cbc -K "$keyhex" -iv "$ivhex" \
-            -in amplify-deploy.zip -out amplify-deploy.enc
-          curl -sf -X PUT -T amplify-deploy.enc "$upload_url"
+            --branch-name main)"
+          upload_url="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["zipUploadUrl"])')"
+          job_id="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["jobId"])')"
+          curl -sf -X PUT -T amplify-deploy.zip "$upload_url"
+          # The upload does not always auto-start the job; start it explicitly
+          # and wait until Amplify reports the deployment outcome.
           aws amplify start-deployment --app-id d2378xfhyngm6g \
-            --branch-name main --file-key "$file_key" \
-            --query deployment.status --output text
+            --branch-name main --job-id "$job_id" >/dev/null
+          status="$(aws amplify get-job --app-id d2378xfhyngm6g \
+            --branch-name main --job-id "$job_id" \
+            --query job.status --output text)"
+          for _ in $(seq 1 30); do
+            [ "$status" != "PENDING" ] && [ "$status" != "PROVISIONING" ] \
+              && [ "$status" != "UPLOADING" ] && break
+            sleep 5
+            status="$(aws amplify get-job --app-id d2378xfhyngm6g \
+              --branch-name main --job-id "$job_id" \
+              --query job.status --output text)"
+          done
+          echo "Amplify job $job_id: $status"
+          [ "$status" = "SUCCEED" ]

@@ -4,9 +4,6 @@ frontend:
     preBuild:
       commands:
         - npm install -g bun
-        # puppeteer is a devDependency for scripts/capture-screenshots.mjs only;
-        # skip its ~150 MB Chrome download in the build
-        - export PUPPETEER_SKIP_DOWNLOAD=true
         - bun install
     build:
       commands:

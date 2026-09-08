@@ -6,7 +6,7 @@ import re
 import boto3
 
 from shared.auth import audit, iso_now
-from shared.db import EVENTS_TABLE, REGISTRATIONS_TABLE, events_table, registrations_table
+from shared.db import events_table, registrations_table
 from shared.ids import new_id, registration_number
 from shared.response import bad_request, conflict, cors, not_found, ok, server_error, with_cors
 
@@ -14,14 +14,14 @@ log = logging.getLogger()
 
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
-_sqs = None
+_sns = None
 
 
-def _sqs_client():
-    global _sqs
-    if _sqs is None:
-        _sqs = boto3.client("sqs")
-    return _sqs
+def _sns_client():
+    global _sns
+    if _sns is None:
+        _sns = boto3.client("sns")
+    return _sns
 
 
 def _valid_email(email):
@@ -103,18 +103,26 @@ def handler(event, context):
               meta={"name": item["fullName"], "email": item["email"], "phone": item["phone"],
                     "reg": item["registrationNumber"], "eventId": event_id})
 
-        # Enqueue post-registration processing (email) via SQS
-        queue_url = os.environ.get("REGISTRATION_QUEUE_URL")
-        if queue_url:
-            _sqs_client().send_message(QueueUrl=queue_url, MessageBody=json.dumps({
-                "registrationId": item["registrationId"],
-                "email": item["email"],
-                "fullName": item["fullName"],
-                "registrationNumber": item["registrationNumber"],
-                "eventName": event_item.get("name"),
-                "eventDate": event_item.get("date"),
-                "venue": event_item.get("venue"),
-            }))
+        # Publish post-registration processing (confirmation email) to SNS;
+        # sendConfirmationEmail consumes the topic. Best-effort: a publish
+        # failure must not fail the registration itself.
+        topic_arn = os.environ.get("SNS_TOPIC_ARN")
+        if topic_arn:
+            try:
+                _sns_client().publish(
+                    TopicArn=topic_arn,
+                    Message=json.dumps({
+                        "registrationId": item["registrationId"],
+                        "email": item["email"],
+                        "fullName": item["fullName"],
+                        "registrationNumber": item["registrationNumber"],
+                        "eventName": event_item.get("name"),
+                        "eventDate": event_item.get("date"),
+                        "venue": event_item.get("venue"),
+                    }),
+                )
+            except Exception:
+                log.exception("SNS publish failed for %s", item["registrationId"])
 
         return ok({"registrationNumber": item["registrationNumber"],
                    "registrationId": item["registrationId"]})

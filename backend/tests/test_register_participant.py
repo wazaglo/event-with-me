@@ -1,4 +1,5 @@
 import json
+from unittest.mock import MagicMock
 
 import registerParticipant
 from conftest import fake_table
@@ -80,4 +81,33 @@ def test_returns_400_when_email_invalid(monkeypatch):
 
 def test_options_preflight():
     res = registerParticipant.handler({"httpMethod": "OPTIONS"}, None)
+    assert res["statusCode"] == 200
+
+
+def test_publishes_to_sns_topic(monkeypatch):
+    _wire(monkeypatch,
+          fake_table(get_item={"Item": OPEN_EVENT}),
+          fake_table(query={"Items": []}, put_item={}))
+    sns = MagicMock()
+    monkeypatch.setenv("SNS_TOPIC_ARN", "arn:aws:sns:us-east-1:111:event-with-me-confirmations")
+    monkeypatch.setattr(registerParticipant, "_sns_client", lambda: sns)
+
+    res = registerParticipant.handler(BASE_EVENT, None)
+    assert res["statusCode"] == 200
+
+    message = json.loads(sns.publish.call_args.kwargs["Message"])
+    assert message["eventName"] == "Summit"
+    assert message["email"] == "ama@bank.com"
+
+
+def test_sns_failure_does_not_fail_registration(monkeypatch):
+    _wire(monkeypatch,
+          fake_table(get_item={"Item": OPEN_EVENT}),
+          fake_table(query={"Items": []}, put_item={}))
+    sns = MagicMock()
+    sns.publish.side_effect = RuntimeError("sns down")
+    monkeypatch.setenv("SNS_TOPIC_ARN", "arn:aws:sns:us-east-1:111:event-with-me-confirmations")
+    monkeypatch.setattr(registerParticipant, "_sns_client", lambda: sns)
+
+    res = registerParticipant.handler(BASE_EVENT, None)
     assert res["statusCode"] == 200

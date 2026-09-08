@@ -118,6 +118,50 @@
           "Fn::Sub": "event-with-me-confirmations"
         }
       }
+    },
+    "ConfirmationDLQ": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "QueueName": {
+          "Fn::Sub": "event-with-me-confirmations-dlq"
+        },
+        "MessageRetentionPeriod": 1209600
+      }
+    },
+    "ConfirmationDLQPolicy": {
+      "Type": "AWS::SQS::QueuePolicy",
+      "Properties": {
+        "Queues": [
+          {
+            "Ref": "ConfirmationDLQ"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com"
+              },
+              "Action": "sqs:SendMessage",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "ConfirmationDLQ",
+                  "Arn"
+                ]
+              },
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:event-with-me-confirmations"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
     }
   },
   "Outputs": {
@@ -151,6 +195,17 @@
       },
       "Export": {
         "Name": "event-with-me-data-ConfirmationTopicArn"
+      }
+    },
+    "ConfirmationDLQArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ConfirmationDLQ",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-data-ConfirmationDLQArn"
       }
     }
   }

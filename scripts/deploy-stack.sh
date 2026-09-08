@@ -28,12 +28,9 @@ trap 'rm -rf "$STAGE"' EXIT
 # Each lambda zip: handler file at root + shared/ python package under shared/.
 # The S3 key embeds a content hash: CFN only sees a code change when the key
 # changes, so reusing a fixed key would leave functions on stale zips.
-# ticketProcessing is not a CloudFormation-managed function (the SES
-# workstream replaces it); skip it so its zip never lands unused in S3.
 echo '{}' > "$STAGE/manifest.json"
-for f in backend/events/*.py backend/registrations/*.py; do
+for f in backend/events/*.py backend/registrations/*.py backend/notifications/*.py; do
   name="$(basename "$f" .py)"
-  [ "$name" = "ticketProcessing" ] && continue
   rm -rf "$STAGE/$name"
   mkdir -p "$STAGE/$name/shared"
   cp "$f" "$STAGE/$name/$name.py"

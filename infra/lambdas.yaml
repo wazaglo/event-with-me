@@ -15,6 +15,11 @@
       "Type": "String",
       "Default": "*",
       "Description": "CORS origin injected into Lambda responses"
+    },
+    "SourceEmail": {
+      "Type": "String",
+      "Default": "noreply@azubisuccess.space",
+      "Description": "Verified SES sender identity for confirmation emails"
     }
   },
   "Resources": {
@@ -118,7 +123,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}createEvent-1d7d5dd327ef.zip"
+            "Fn::Sub": "${CodePrefix}createEvent.zip"
           }
         },
         "Environment": {
@@ -167,7 +172,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listEvents-72f5aca4aa7d.zip"
+            "Fn::Sub": "${CodePrefix}listEvents.zip"
           }
         },
         "Environment": {
@@ -216,7 +221,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getEvent-f3e4d0e94320.zip"
+            "Fn::Sub": "${CodePrefix}getEvent.zip"
           }
         },
         "Environment": {
@@ -265,7 +270,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateEvent-f6dd31f8c799.zip"
+            "Fn::Sub": "${CodePrefix}updateEvent.zip"
           }
         },
         "Environment": {
@@ -314,7 +319,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}deleteEvent-a62c7134f1af.zip"
+            "Fn::Sub": "${CodePrefix}deleteEvent.zip"
           }
         },
         "Environment": {
@@ -363,7 +368,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}registerParticipant-fd296cfbc6ee.zip"
+            "Fn::Sub": "${CodePrefix}registerParticipant.zip"
           }
         },
         "Environment": {
@@ -412,7 +417,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listRegistrations-ad6bb31144c1.zip"
+            "Fn::Sub": "${CodePrefix}listRegistrations.zip"
           }
         },
         "Environment": {
@@ -461,7 +466,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistrations-fcdb0de6c92b.zip"
+            "Fn::Sub": "${CodePrefix}getRegistrations.zip"
           }
         },
         "Environment": {
@@ -510,7 +515,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistration-001563fb86c0.zip"
+            "Fn::Sub": "${CodePrefix}getRegistration.zip"
           }
         },
         "Environment": {
@@ -559,7 +564,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateRegistration-69d1e591007e.zip"
+            "Fn::Sub": "${CodePrefix}updateRegistration.zip"
           }
         },
         "Environment": {
@@ -608,7 +613,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}deleteRegistration-73a7bb14600e.zip"
+            "Fn::Sub": "${CodePrefix}deleteRegistration.zip"
           }
         },
         "Environment": {
@@ -657,7 +662,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}checkIn-361f25431762.zip"
+            "Fn::Sub": "${CodePrefix}checkIn.zip"
           }
         },
         "Environment": {
@@ -706,7 +711,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}walkInRegistration-58c2c2a74880.zip"
+            "Fn::Sub": "${CodePrefix}walkInRegistration.zip"
           }
         },
         "Environment": {
@@ -755,7 +760,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}printBadge-6b7f30500494.zip"
+            "Fn::Sub": "${CodePrefix}printBadge.zip"
           }
         },
         "Environment": {
@@ -804,7 +809,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getAuditLog-8e0b9590e26e.zip"
+            "Fn::Sub": "${CodePrefix}getAuditLog.zip"
           }
         },
         "Environment": {
@@ -824,6 +829,161 @@
             "SNS_TOPIC_ARN": {
               "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
             }
+          }
+        }
+      }
+    },
+    "EmailRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Sub": "event-with-me-email-role"
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "ses-send",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ses:SendEmail",
+                    "ses:SendRawEmail"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "registration-stamp",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "dynamodb:UpdateItem",
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/event-with-me-registrations"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "topic-unsubscribe",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Unsubscribe",
+                    "sns:ListSubscriptionsByTopic"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:event-with-me-confirmations"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "SendConfirmationEmailFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "EmailRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-SendConfirmationEmail",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "sendConfirmationEmail.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "EmailRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 30,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}sendConfirmationEmail.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "SES_SOURCE_EMAIL": {
+              "Ref": "SourceEmail"
+            }
+          }
+        }
+      }
+    },
+    "EmailInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SendConfirmationEmailFunction",
+            "Arn"
+          ]
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+        }
+      }
+    },
+    "EmailSubscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "TopicArn": {
+          "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+        },
+        "Protocol": "lambda",
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "SendConfirmationEmailFunction",
+            "Arn"
+          ]
+        },
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::ImportValue": "event-with-me-data-ConfirmationDLQArn"
           }
         }
       }
@@ -993,6 +1153,17 @@
       },
       "Export": {
         "Name": "event-with-me-lambdas-GetAuditLogArn"
+      }
+    },
+    "SendConfirmationEmailArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "SendConfirmationEmailFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-SendConfirmationEmailArn"
       }
     }
   }

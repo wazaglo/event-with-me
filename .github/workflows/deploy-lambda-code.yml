@@ -50,9 +50,8 @@ jobs:
           set -euo pipefail
           tmp="$(mktemp -d)"
           failed=""
-          for f in backend/events/*.py backend/registrations/*.py; do
+          for f in backend/events/*.py backend/registrations/*.py backend/notifications/*.py; do
             name="$(basename "$f" .py)"
-            [ "$name" = "ticketProcessing" ] && continue # SES workstream, undeployed
             fn="event-with-me-$(echo "$name" | sed 's/^./\U&/')"
             mkdir -p "$tmp/$name/shared"
             cp "$f" "$tmp/$name/$name.py"
