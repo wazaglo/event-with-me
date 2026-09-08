@@ -31,9 +31,7 @@ await page.setViewport({ width: 1440, height: 900 });
 async function settle() {
   // TanStack Query + networkidle: wait for spinner-free content, cap at 8s.
   try {
-    await page
-      .waitForNetworkIdle({ idleTime: 700, timeout: 8000 })
-      .catch(() => {});
+    await page.waitForNetworkIdle({ idleTime: 700, timeout: 8000 }).catch(() => {});
     await new Promise((r) => setTimeout(r, 500));
   } catch {}
 }

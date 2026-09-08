@@ -1,318 +1,155 @@
 # Event Registration & Ticketing System
 
-A fully serverless AWS-native event registration and ticketing system that replaces a manual Microsoft Forms + Excel workflow. The system has two distinct user-facing surfaces:
+A serverless AWS event registration and ticketing system that replaces a manual Microsoft Forms + Excel workflow. Two user-facing surfaces:
 
-- **Public registration portal**: attendees self-register for events
-- **Coordinator console**: staff manage events, check in attendees, print badges, and run reports
+- **Public registration portal** (`/register/...`): attendees self-register for events, no account needed
+- **Coordinator console** (`/auth` + `_authenticated` routes): staff manage events, check attendees in, print badges, and run reports
+
+**Status at a glance**
+
+| Area                | State                                                                           |
+| ------------------- | ------------------------------------------------------------------------------- |
+| Backend API         | Live: 15 Python 3.13 Lambdas behind API Gateway (us-east-1)                     |
+| Frontend            | Working, run via local `bun run dev`; Amplify Hosting not connected yet         |
+| Confirmation emails | **Not wired**: SNS topic exists with no subscriber (see "Email pipeline" below) |
+| Staff management    | Console page is a stub; in-app staff management is a planned workstream         |
+| CI (GitHub Actions) | Backend workflow defined; repo still needs AWS credentials secrets              |
 
 ---
 
-## High-Level Architecture
+## Architecture
 
 ![Architecture](docs/architecture.png)
 
-CI/CD: push `backend/**/*.py` → GitHub Actions runs pytest and updates the deployed Lambda functions; the frontend auto-deploys through Amplify on every push to `main`.
+Four CloudFormation stacks, deployed in dependency order (each imports the previous stacks' exports):
+
+| Stack                   | Contents                                                |
+| ----------------------- | ------------------------------------------------------- |
+| `event-with-me-auth`    | Cognito user pool, app client, three groups             |
+| `event-with-me-data`    | 3 DynamoDB tables + SNS confirmation topic              |
+| `event-with-me-lambdas` | 15 Lambda functions + shared execution role             |
+| `event-with-me-api`     | REST API Gateway with Cognito authorizer + stage `prod` |
+
+Templates are **generated**, not hand-written: `infra/generate-template.mjs` emits `infra/*.yaml`. Edit the generator, never the YAML.
 
 ---
 
-## Layer-by-Layer Technical Breakdown
+## Frontend
 
-### 1. Frontend: React/TanStack Start on Amplify
-
-The frontend is a Single Page Application built with TanStack Start (React 19 + Vite). It is deployed as static files to AWS Amplify Hosting.
-
-**How auth works on the frontend:**
-
-- `src/lib/auth/cognito-client.ts` uses the `amazon-cognito-identity-js` SDK
-- On sign-in, Cognito returns 3 tokens: **ID token**, **Access token**, **Refresh token**
-- The ID token is a JWT stored in `localStorage` via the Cognito SDK
-- Every API call attaches it as `Authorization: Bearer <idToken>`
-- The JWT payload contains `cognito:groups` - the frontend reads this to determine role (`Admin`, `RegistrationOfficer`, `CheckinOfficer`) and shows/hides nav items accordingly
-- `src/lib/hooks/use-auth.ts` exposes `isAdmin`, `isRegOfficer`, `isCheckinOfficer` booleans derived from the token groups
-
-**How data flows:**
-
-- `src/lib/api-client.ts` is the single source of truth for all HTTP calls
-- It reads `VITE_API_URL` from env vars to know the API Gateway base URL
-- TanStack Query caches responses, handles loading/error states, and auto-refetches
-
-**Amplify Hosting:**
-
-- Not connected yet: create the app in the Amplify console against `TerryBinful/event-with-me` (Step 3 below), then every push to `main` will run `bun run build` and serve the `dist/` folder
-- Environment variables (`VITE_API_URL`, `VITE_COGNITO_USER_POOL_ID`, etc.) are injected at build time via the Amplify console; locally, copy `.env.example` to `.env`
-
----
-
-### 2. Authentication: AWS Cognito
-
-Cognito is the identity layer for all coordinator staff. Attendees do not need accounts.
-
-**User Pool structure:**
-
-```
-Cognito User Pool: event-with-me-users
-  │
-  ├── Users (staff accounts - email + password)
-  │
-  └── Groups
-        ├── Admin               → full system access
-        ├── RegistrationOfficer → walk-in + participants
-        └── CheckinOfficer      → check-in only
-```
-
-**Token flow:**
-
-```
-Browser                    Cognito
-  │                           │
-  │── signIn(email, pass) ───▶│
-  │◀── { idToken, accessToken, refreshToken } ──│
-  │                           │
-  │── API call + Bearer idToken ──▶ API Gateway
-                                        │
-                                   Cognito Authorizer
-                                   validates token signature
-                                   extracts sub, email, groups
-                                        │
-                                   Lambda receives
-                                   event.requestContext
-                                   .authorizer.claims
-```
-
-**Role enforcement:**
-
-- API Gateway's Cognito Authorizer rejects any request with an invalid or expired token before it reaches Lambda
-- Inside Lambda, `shared/auth.py` reads `claims["cognito:groups"]` and checks `isAdmin()` for admin-only operations
-- The frontend also enforces roles visually (hides nav items, redirects) but the real enforcement is in Lambda
-
----
-
-### 3. API Gateway
-
-A REST API (not HTTP API) is used because it supports the Cognito Authorizer natively.
-
-**Key design decisions:**
-
-- `GET /events` and `POST /events/{eventId}/register` have `Auth: NONE` - public endpoints for attendees
-- All other endpoints require a valid Cognito JWT
-- CORS is configured per-response in Lambda (`backend/shared/response.py`) using the `ALLOWED_ORIGIN` environment variable; tighten it from the `*` default to the Amplify domain via the `AllowedOrigin` parameter of the `event-with-me-lambdas` stack (`scripts/update-cors-origin.sh`)
-- Each endpoint maps 1:1 to a Lambda function
-
----
-
-### 4. Lambda Functions
-
-15 functions, all Python 3.13. Each function is small and single-purpose, defined in `infra/generate-template.mjs` and deployed through the `event-with-me-lambdas` CloudFormation stack. A 16th handler, `backend/registrations/ticketProcessing.py`, exists as the source for the planned email pipeline and is not deployed.
-
-**Shared modules (`backend/shared/`):**
-
-| Module        | Purpose                                                                                 |
-| ------------- | --------------------------------------------------------------------------------------- |
-| `db.py`       | Shared boto3 DynamoDB resource + table name env vars                                    |
-| `response.py` | Standard HTTP response helpers (`ok`, `created`, `bad_request`, etc.) with CORS headers |
-| `ids.py`      | UUID generator + registration number formatter (`SUMMIT-0001`)                          |
-| `auth.py`     | Extract caller identity from Cognito claims, `isAdmin()` check, audit log writer        |
-
-**Request lifecycle inside a Lambda:**
-
-```
-API Gateway event
-      │
-      ▼
-1. OPTIONS check → return CORS headers immediately
-2. Extract caller from event.requestContext.authorizer.claims
-3. Parse + validate request body / path parameters
-4. DynamoDB operation (Get, Put, Update, Delete, Query, Scan)
-5. Write audit log entry (fire-and-forget)
-6. Return standardised JSON response
-```
-
-**IAM permissions** - one role shared by all functions (`event-with-me-lambdas` stack): CloudWatch Logs via the AWS Lambda basic execution policy, plus inline `dynamodb-access` (the three tables) and `sns-publish` (the confirmation topic) policies.
-
----
-
-### 5. DynamoDB
-
-Three tables, all using PAY_PER_REQUEST billing (no capacity planning needed).
-
-**Events table: event-with-me-events**
-
-```
-PK: eventId (string)
-Attributes: name, date, venue, description, registrationOpen,
-            primaryColor, accentColor, logoUrl, showQr,
-            showRegistrationNumber, badgeFontSize,
-            createdAt, updatedAt
-```
-
-**Registrations table: event-with-me-registrations**
-
-```
-PK: registrationId (string)
-Global secondary indexes:
-GSI 1: email-eventId-index
-  PK: email, SK: eventId
-  → Used for duplicate email check on registration
-  → Used for GET /registrations/{email}
-
-GSI 2: eventId-createdAt-index
-  PK: eventId, SK: createdAt
-  → Used for GET /events/{eventId}/registrations
-  → Returns registrations sorted newest-first
-
-Attributes: registrationNumber, fullName, organisation, email,
-            phone, position, registrationType (online|walk_in),
-            checkedInAt, checkedInBy, badgePrintedAt,
-            badgePrintCount, createdBy, createdAt, updatedAt
-```
-
-**AuditLogs table: event-with-me-audit-logs**
-
-```
-PK: id (string)
-Attributes: action, entity, entityId, actorId, actorLabel,
-            meta (JSON), createdAt
-```
-
----
-
-### 6. SNS: Confirmation Emails
-
-The `event-with-me-confirmations` SNS topic (created by the `event-with-me-data` stack) is the intended channel for registration confirmation emails. `registerParticipant` grants itself publish rights and receives the topic ARN via the `SNS_TOPIC_ARN` environment variable.
-
-> Not wired end-to-end yet: the topic has no subscriber, and `registerParticipant` currently only enqueues to SQS when `REGISTRATION_QUEUE_URL` is set (it is not). Building the email consumer is the next workstream (see Step 4 below and `backend/registrations/ticketProcessing.py`, which holds the email template).
-
----
-
-### 7. CI/CD Pipeline: GitHub Actions
-
-```
-Push to dvlp/main (backend/**/*.py)
-        │
-        ▼
-Job 1: test
-  - Checkout code
-  - Python 3.13 setup
-  - pip install -r requirements-dev.txt
-  - pytest (backend/tests/)
-        │
-        ▼ (only if tests pass)
-Job 2: deploy (matrix over the deployed functions)
-  - Configure AWS credentials (from GitHub Secrets)
-  - For each Lambda function, zip its .py handler + shared/ subdirectory
-  - Run lambda update-function-code on event-with-me-<Name> functions
-  - Output result to GitHub Actions summary
-```
-
-Frontend deployment is handled entirely by Amplify, it watches the GitHub repo independently and deploys on every push to `main`.
-
----
-
-## First-Time Setup
-
-### Step 1: AWS Account & IAM
-
-Create a dedicated IAM user for GitHub Actions deployments:
-
-```
-AWS Console → IAM → Users → Create user
-  Name: github-actions-deployer
-  Access type: Programmatic access
-  Permissions: AdministratorAccess
-  → Save Access Key ID + Secret Access Key
-```
-
-Add to GitHub repo **Settings → Secrets → Actions**:
-
-```
-AWS_ACCESS_KEY_ID     = <from IAM>
-AWS_SECRET_ACCESS_KEY = <from IAM>
-AWS_REGION            = us-east-1
-```
-
----
-
----
-
-### Step 2: Create the First Admin User
+TanStack Start (React 19 + Vite + TypeScript), styled with Tailwind + shadcn/ui.
 
 ```bash
-aws cognito-idp admin-create-user \
-  --user-pool-id <UserPoolId> \
-  --username admin@yourorg.com \
-  --temporary-password Admin@1234 \
-  --user-attributes Name=name,Value="Admin User"
-
-aws cognito-idp admin-add-user-to-group \
-  --user-pool-id <UserPoolId> \
-  --username admin@yourorg.com \
-  --group-name Admin
+bun install
+cp .env.example .env   # fill in the four VITE_ values from your stacks
+bun run dev            # http://localhost:5173
 ```
 
-The admin signs in at `/auth` and is prompted by Cognito to set a permanent password on first login.
+Scripts: `bun run build`, `bun run lint`, `bun run format`. Type-check with `npx tsc --noEmit`.
+
+**Auth flow:** `src/lib/auth/cognito-client.ts` signs in over Cognito SRP (`amazon-cognito-identity-js`). The ID token goes out as `Authorization: Bearer <idToken>` on every call. `src/lib/hooks/use-auth.ts` derives `isAdmin` / `isRegOfficer` / `isCheckinOfficer` from the token's `cognito:groups` and drives navigation visibility (the API enforces the real rules).
+
+**Data access:** all HTTP lives in `src/lib/api-client.ts`, which reads `VITE_API_URL`; TanStack Query handles caching and refetch.
+
+**Amplify Hosting: not connected yet.** No Amplify app exists for this repo; the screenshots below were captured against `bun run dev`. `amplify.yml` is ready (build with bun, serve `dist/`, SPA rewrites) and Step 3 below connects it.
+
+### Screenshots
+
+Captured by `scripts/capture-screenshots.mjs` (puppeteer) against the live API. In [docs/screenshots](docs/screenshots):
+
+| Login                                   | Dashboard                                       | Participants                                          | Check-in                                    | Walk-in                                    | Reports                                     |
+| --------------------------------------- | ----------------------------------------------- | ----------------------------------------------------- | ------------------------------------------- | ------------------------------------------ | ------------------------------------------- |
+| ![login](docs/screenshots/01-login.png) | ![dashboard](docs/screenshots/03-dashboard.png) | ![participants](docs/screenshots/05-participants.png) | ![checkin](docs/screenshots/06-checkin.png) | ![walkin](docs/screenshots/07-walk-in.png) | ![reports](docs/screenshots/08-reports.png) |
+
+Plus `02-login-filled`, `04-events`, `09-audit`, `10-settings`, `11-staff` (currently the Cognito-instructions stub), `12-register-public`.
 
 ---
 
-### Step 3: Connect AWS Amplify Hosting
+## Backend
 
-```
-AWS Console → Amplify → New app → Host web app
-  → GitHub → TerryBinful/event-with-me → branch: main
-  → Amplify detects amplify.yml automatically
-  → App settings → Environment variables → Add:
-      VITE_API_URL              = <API Gateway invoke URL>
-      VITE_COGNITO_USER_POOL_ID = <Cognito UserPool ID>
-      VITE_COGNITO_CLIENT_ID    = <Cognito App Client ID>
-      VITE_AWS_REGION           = us-east-1
-  → Save and deploy
-```
+### API endpoints (API Gateway REST, stage `prod`)
 
-Get these values from the AWS Console:
+| Method + path                         | Auth    | Lambda                |
+| ------------------------------------- | ------- | --------------------- |
+| `GET /events`                         | none    | `ListEvents`          |
+| `POST /events`                        | Admin\* | `CreateEvent`         |
+| `GET /events/{eventId}`               | JWT     | `GetEvent`            |
+| `PUT /events/{eventId}`               | Admin\* | `UpdateEvent`         |
+| `DELETE /events/{eventId}`            | Admin\* | `DeleteEvent`         |
+| `POST /events/{eventId}/register`     | none    | `RegisterParticipant` |
+| `GET /events/{eventId}/registrations` | JWT     | `ListRegistrations`   |
+| `POST /events/{eventId}/walk-in`      | JWT     | `WalkInRegistration`  |
+| `GET /registrations/by-email/{email}` | JWT     | `GetRegistrations`    |
+| `GET /registrations/{id}`             | JWT     | `GetRegistration`     |
+| `PUT /registrations/{id}`             | JWT     | `UpdateRegistration`  |
+| `DELETE /registrations/{id}`          | JWT     | `DeleteRegistration`  |
+| `POST /registrations/{id}/checkin`    | JWT     | `CheckIn`             |
+| `POST /registrations/{id}/print`      | JWT     | `PrintBadge`          |
+| `GET /audit`                          | Admin\* | `GetAuditLog`         |
 
-- **API Gateway invoke URL** → API Gateway → `EventsApi` → Stages → Invoke URL
-- **Cognito UserPool ID** → Cognito → User pools → `userPool` → Pool ID
-- **Cognito App Client ID** → Cognito → User pools → `userPool` → App integration → App client list → `EventRegistrationUserPool` → Client ID
+\* Requires a Cognito JWT; `*` marks handlers that additionally enforce `isAdmin()` (or officer roles) in code. `OPTIONS` on every path returns CORS headers from the Lambda. CORS origin comes from the `ALLOWED_ORIGIN` env var, set via the lambdas stack's `AllowedOrigin` parameter (default `*`; repoint with `scripts/update-cors-origin.sh`).
 
----
+### Lambda functions
 
-### Step 4: Activate Confirmation Emails (SQS, SES)
+15 functions, Python 3.13, defined in `FUNCS` in `infra/generate-template.mjs`. Each zip ships its handler plus the `shared/` package (`backend/shared/`: `db.py` boto3 clients, `response.py` CORS+JSON helpers, `ids.py` UUID + registration number formatter, `auth.py` claims extraction, `isAdmin`, audit writer). All functions share one role: CloudWatch Logs + DynamoDB access on the three tables + publish on the confirmation topic.
 
-**5a. Verify a sender email in SES:**
+`backend/registrations/ticketProcessing.py` is **not deployed**; it holds the email template the future confirmation-email Lambda builds on.
 
-```
-AWS Console → SES → Verified identities → Create identity
-  → Email address: noreply@yourorg.com
-  → Click the verification link sent to your inbox
-```
+### Data model (DynamoDB, PAY_PER_REQUEST)
 
-**5b. Create a confirmation email Lambda** (`backend/notifications/send_confirmation_email.py`):
+- **event-with-me-events** - PK `eventId`; name, date, venue, description, registrationOpen, badge styling fields, timestamps
+- **event-with-me-registrations** - PK `registrationId`; GSI `email-eventId-index` (duplicate-email check, by-email lookup) and GSI `eventId-createdAt-index` (roster newest-first); registrationNumber, attendee details, `registrationType` (online|walk_in), check-in and badge-print tracking
+- **event-with-me-audit-logs** - PK `id`; action, entity, entityId, actorId/Label, meta, createdAt
 
-- Triggered by SNS topic `event-confirmations-prod`
-- Parses the JSON message payload
-- Calls `SESClient.sendEmail()` with a formatted HTML body
+### Email pipeline (not built yet)
 
----
-
----
-
-### Step 6: Tighten IAM Permissions
-
-Replace `AdministratorAccess` on the GitHub Actions IAM user with a scoped policy covering only Lambda, API Gateway, DynamoDB, Cognito, SNS, IAM, and Budgets.
+The SNS topic `event-with-me-confirmations` exists (data stack) but has **no subscriber**. `registerParticipant` only sends to SQS when `REGISTRATION_QUEUE_URL` is set, which it isn't, so no message is currently produced. Planned: a SES-backed confirmation Lambda consuming the topic (template available in `ticketProcessing.py`).
 
 ---
 
-### Step 7: Custom Domain
+## Deploying & operating
 
+### First deploy of the backend
+
+```bash
+scripts/deploy-stack.sh            # base name default: event-with-me
 ```
-AWS Console → Amplify → your app → Domain management
-  → Add domain: events.yourorg.com
-  → Amplify provisions SSL via ACM automatically
-  → Update CORS AllowOrigin in API Gateway settings to your domain
-```
+
+The script zips each handler with `shared/` under `shared/`, uploads to `s3://event-with-me-deploy-<account>/event-with-me/<name>-<md5-12>.zip`, regenerates the stack YAMLs with content-hashed S3 keys, then creates/updates the four stacks in order and redeploys the API stage. The content hash matters: CloudFormation only sees a code change when the **S3 key changes**.
+
+After the first deploy, read the values you need from stack outputs (`aws cloudformation describe-stacks --stack-name event-with-me-api` etc.): the invoke URL, pool ID, and app client ID go into `.env` (local) and later the Amplify console.
+
+### CI: GitHub Actions
+
+`.github/workflows/deploy-lambda-code.yml` triggers on pushes to `main`/`dvlp` touching `backend/**/*.py` (plus manual dispatch): a `test` job (Python 3.13, pip, pytest) gates a `deploy` matrix that zips each function and runs `lambda update-function-code`.
+
+It is **not functional yet**: the repo has no `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` secrets, so the deploy jobs fail at credential load. The local `scripts/deploy-stack.sh` path is what has been used so far.
+
+### First-time setup checklist
+
+1. **AWS credentials for you (the operator):** configure the AWS CLI profile that will run `scripts/deploy-stack.sh`.
+2. **Deploy backend:** `scripts/deploy-stack.sh`, then verify with a smoke call: `curl https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/events` returns `[]`.
+3. **Create the first Admin:**
+
+   ```bash
+   aws cognito-idp admin-create-user \
+     --user-pool-id <UserPoolId> \
+     --username admin@yourorg.com \
+     --temporary-password 'Admin@1234' \
+     --user-attributes Name=name,Value="Admin User"
+   aws cognito-idp admin-add-user-to-group \
+     --user-pool-id <UserPoolId> --username admin@yourorg.com --group-name Admin
+   ```
+
+   First sign-in at `/auth` prompts for a permanent password.
+
+4. **Local frontend:** `.env` with the four `VITE_` values, `bun run dev`, sign in at `/auth`.
+5. **Connect Amplify Hosting (optional):** Amplify console → host `main` branch; `amplify.yml` is detected automatically; add the four `VITE_` vars in Amplify environment settings. Then set `AllowedOrigin` to the Amplify domain via `scripts/update-cors-origin.sh`.
+6. **GitHub Actions secrets (optional, before using CI):** create a scoped IAM user (Lambda, API Gateway, DynamoDB, Cognito, SNS, S3 artifact bucket, `iam:PassRole` for the Lambda role), add `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` as repo secrets.
+7. **Email pipeline (optional):** verify a sender identity in SES, build the SNS-triggered confirmation Lambda from `ticketProcessing.py`, subscribe it to `event-with-me-confirmations`.
 
 ---
 
-## Cognito Groups (Roles)
+## Cognito roles
 
 | Group                 | Access                                                |
 | --------------------- | ----------------------------------------------------- |
@@ -320,87 +157,62 @@ AWS Console → Amplify → your app → Domain management
 | `RegistrationOfficer` | Walk-in registration, participants                    |
 | `CheckinOfficer`      | Check-in, walk-in (limited)                           |
 
----
+Enforcement lives in the handlers (`shared/auth.py`); the API Gateway Cognito authorizer rejects invalid/expired tokens first.
 
 ---
 
-## Badge Printing
+## Testing
 
-Badge is **100mm × 60mm landscape**. In Chrome print dialog:
+```bash
+backend/.venv/bin/python -m pytest tests -q   # or: python -m pytest backend/tests
+```
 
-1. Paper size: 100mm × 60mm landscape
-2. Margins: None
-3. Uncheck "Headers and footers"
+11 pytest tests (`backend/tests/`) with faked DynamoDB tables via `conftest.py` helpers. Frontend gates: `bun run lint`, `npx tsc --noEmit`, `bun run build`.
+
+Screenshot suite (optional, needs `bun install` for the puppeteer devDependency and a running dev server):
+
+```bash
+bun run dev &
+bun scripts/capture-screenshots.mjs   # writes docs/screenshots/*.png
+```
 
 ---
 
-## Project Structure
+## Badge printing
+
+Badge is **100 mm × 60 mm landscape**. In Chrome's print dialog: paper 100×60 mm landscape, margins none, headers/footers off.
+
+---
+
+## Project structure
 
 ```
-backend/                  Lambda function code
-  events/                 Lambda: createEvent, listEvents, updateEvent
-  registrations/          Lambda: register, list, checkIn, walkIn,
-                                  delete, update, print, audit
-  shared/                 db.py, response.py, ids.py, auth.py
-  tests/                  pytest unit tests
-
-src/
-  lib/
-    api-client.ts         All API calls to API Gateway
-    auth/
-      cognito-client.ts   Cognito sign-in/out/session/reset
-    hooks/
-      use-auth.ts         Cognito session + role hooks
-  routes/                 TanStack file-based routes
-  components/             UI components
-
-.github/workflows/
-  deploy-lambda-code.yml  CI/CD: test → zip → lambda update-function-code
+backend/
+  events/            5 event handlers (.py)
+  registrations/     10 registration handlers (.py) + ticketProcessing.py (undeployed)
+  shared/            db.py, response.py, ids.py, auth.py
+  tests/             pytest suite
+  requirements-dev.txt
 
 infra/
-  generate-template.mjs   Generates the 4 CloudFormation stacks (auth/data/lambdas/api)
+  generate-template.mjs   source of truth for the 4 CFN stacks
 scripts/
-  deploy-stack.sh         Uploads zips with content-hashed S3 keys + deploys stacks
-  update-cors-origin.sh   Repoints the AllowedOrigin parameter at the Amplify domain
-  capture-screenshots.mjs Headless-Chrome screenshot script (devDependency: puppeteer)
+  deploy-stack.sh         zip + hash + upload + stack deploy
+  update-cors-origin.sh   repoint AllowedOrigin
+  capture-screenshots.mjs puppeteer screenshot capture
 
-docs/screenshots/         UI screenshots (login, dashboard, events, participants, ...)
+src/
+  lib/               api-client.ts, auth/cognito-client.ts, hooks/use-auth.ts, ...
+  routes/            TanStack file-based routes (see src/routes/README.md)
+  components/        UI components
 
-amplify.yml               Amplify Hosting build config
-.env.example              Required environment variables
-```
+docs/
+  screenshots/       12 UI screenshots
+  architecture.png   diagram export (editable .drawio kept untracked locally)
 
----
+.github/workflows/
+  deploy-lambda-code.yml  CI: pytest → zip → update-function-code (needs secrets)
 
-## Setup Checklist
-
-```
-Infrastructure
-  ☐ Create IAM user for GitHub Actions
-  ☐ Add AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION to GitHub Secrets
-
-Auth
-  ☐ Create first admin user
-  ☐ Test sign-in at /auth
-
-Frontend
-  ☐ Connect Amplify Hosting to GitHub repo
-  ☐ Add environment variables in Amplify console
-  ☐ Verify frontend loads and calls the API
-
-Emails (optional)
-  ☐ Verify sender email in SES
-  ☐ Build sendConfirmationEmail Lambda
-  ☐ Subscribe Lambda to SNS topic
-
-Monitoring
-  ☐ Wire CloudWatch alarms to SNS email notifications
-
-Security
-  ☐ Scope down IAM policy for GitHub Actions user
-  ☐ Restrict CORS AllowOrigin to Amplify domain
-
-Custom domain (optional)
-  ☐ Configure custom domain in Amplify
-  ☐ Update CORS in API Gateway settings
+amplify.yml               ready for Amplify Hosting (not connected yet)
+.env.example              the four VITE_ values to copy into .env
 ```
