@@ -99,7 +99,7 @@ jobs:
               --branch-name main --job-id "$job_id" \
               --query job.summary.status --output text)"
             case "$status" in
-              PENDING|PROVISIONING|UPLOADING|"") sleep 5 ;;
+              PENDING|PROVISIONING|UPLOADING|RUNNING|"") sleep 5 ;;
               *) break ;;
             esac
           done
