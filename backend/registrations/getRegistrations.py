@@ -2,11 +2,12 @@ import logging
 from urllib.parse import unquote
 
 from shared.db import registrations_table
-from shared.response import bad_request, cors, ok, server_error
+from shared.response import bad_request, cors, ok, server_error, with_cors
 
 log = logging.getLogger()
 
 
+@with_cors
 def handler(event, context):
     if event.get("httpMethod") == "OPTIONS":
         return cors()

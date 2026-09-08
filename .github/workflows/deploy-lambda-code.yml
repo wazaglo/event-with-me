@@ -2,10 +2,17 @@ name: Deploy Lambda Code
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "backend/**/*.py"
   push:
     branches: [main, dvlp]
     paths:
       - "backend/**/*.py"
+
+permissions:
+  id-token: write # OIDC token for the scoped deploy role
+  contents: read
 
 jobs:
   test:
@@ -24,71 +31,54 @@ jobs:
       - run: python -m pytest tests -q
 
   deploy:
+    # main/dvlp pushes and manual dispatches deploy; PRs stop at tests
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: test
-    strategy:
-      matrix:
-        function:
-          - { name: event-with-me-CreateEvent, file: backend/events/createEvent.py }
-          - { name: event-with-me-ListEvents, file: backend/events/listEvents.py }
-          - { name: event-with-me-UpdateEvent, file: backend/events/updateEvent.py }
-          - { name: event-with-me-GetEvent, file: backend/events/getEvent.py }
-          - { name: event-with-me-DeleteEvent, file: backend/events/deleteEvent.py }
-          - {
-              name: event-with-me-RegisterParticipant,
-              file: backend/registrations/registerParticipant.py,
-            }
-          - {
-              name: event-with-me-ListRegistrations,
-              file: backend/registrations/listRegistrations.py,
-            }
-          - {
-              name: event-with-me-GetRegistrations,
-              file: backend/registrations/getRegistrations.py,
-            }
-          - {
-              name: event-with-me-DeleteRegistration,
-              file: backend/registrations/deleteRegistration.py,
-            }
-          - { name: event-with-me-CheckIn, file: backend/registrations/checkIn.py }
-          - {
-              name: event-with-me-WalkInRegistration,
-              file: backend/registrations/walkInRegistration.py,
-            }
-          - {
-              name: event-with-me-UpdateRegistration,
-              file: backend/registrations/updateRegistration.py,
-            }
-          - { name: event-with-me-PrintBadge, file: backend/registrations/printBadge.py }
-          - { name: event-with-me-GetAuditLog, file: backend/registrations/getAuditLog.py }
-
+    environment: production # requires AWS_DEPLOY_ROLE_ARN as environment secret/variable
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
 
-      - name: Switch ${{ matrix.function.name }} to python3.13
+      - name: Deploy all Lambda functions
         run: |
-          aws lambda update-function-configuration \
-            --function-name ${{ matrix.function.name }} \
-            --runtime python3.13
-          aws lambda wait function-updated \
-            --function-name ${{ matrix.function.name }}
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          failed=""
+          for f in backend/events/*.py backend/registrations/*.py; do
+            name="$(basename "$f" .py)"
+            [ "$name" = "ticketProcessing" ] && continue # SES workstream, undeployed
+            fn="event-with-me-$(echo "$name" | sed 's/^./\U&/')"
+            mkdir -p "$tmp/$name/shared"
+            cp "$f" "$tmp/$name/$name.py"
+            cp backend/shared/*.py "$tmp/$name/shared/"
+            (cd "$tmp/$name" && zip -qr "$tmp/$name.zip" .)
+            echo "::group::deploy $fn"
+            if aws lambda update-function-code \
+                 --function-name "$fn" \
+                 --zip-file "fileb://$tmp/$name.zip" \
+               && aws lambda wait function-updated --function-name "$fn"; then
+              echo "deployed $fn"
+            else
+              echo "::error::$fn failed"
+              failed="$failed $fn"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "Failed functions:$failed"
+            exit 1
+          fi
 
-      - name: Zip and deploy ${{ matrix.function.name }}
+      - name: Redeploy API stage
         run: |
-          mkdir -p /tmp/function/shared
-          cp ${{ matrix.function.file }} /tmp/function/
-          cp backend/shared/*.py /tmp/function/shared/
-          cd /tmp/function
-          zip -r /tmp/deploy.zip .
-          aws lambda update-function-code \
-            --function-name ${{ matrix.function.name }} \
-            --zip-file fileb:///tmp/deploy.zip
-          aws lambda wait function-updated \
-            --function-name ${{ matrix.function.name }}
+          api_id="$(aws apigateway get-rest-apis --query \
+            'items[?name==`event-with-me-api`].id' --output text)"
+          aws apigateway create-deployment --rest-api-id "$api_id" --stage-name prod \
+            --description "gha ${{ github.sha }}"
+          echo "stage prod redeployed (api $api_id)"

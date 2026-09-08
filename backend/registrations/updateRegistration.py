@@ -3,13 +3,14 @@ import logging
 
 from shared.auth import audit, caller_from_event, iso_now
 from shared.db import registrations_table
-from shared.response import bad_request, cors, not_found, ok, server_error
+from shared.response import bad_request, cors, not_found, ok, server_error, with_cors
 
 log = logging.getLogger()
 
 ALLOWED = ["fullName", "organisation", "email", "phone", "position"]
 
 
+@with_cors
 def handler(event, context):
     if event.get("httpMethod") == "OPTIONS":
         return cors()

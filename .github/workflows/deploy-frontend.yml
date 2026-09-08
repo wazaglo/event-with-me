@@ -1,0 +1,83 @@
+name: Deploy Frontend
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "bun.lock"
+      - "vite.config.ts"
+      - "tsconfig.json"
+      - "index.html"
+      - "amplify.yml"
+      - ".github/workflows/deploy-frontend.yml"
+
+permissions:
+  id-token: write # OIDC token for the scoped deploy role
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - run: bun install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "true"
+
+      - name: Lint and typecheck
+        run: |
+          bun run lint
+          bunx tsc --noEmit
+
+      - name: Build
+        run: bun run build
+        env:
+          VITE_API_URL: https://c8geb0yr98.execute-api.us-east-1.amazonaws.com/prod
+          VITE_COGNITO_USER_POOL_ID: us-east-1_e1cUWBLbn
+          VITE_COGNITO_CLIENT_ID: 6kdvj9dg78eani8c88qurco01b
+          VITE_AWS_REGION: us-east-1
+
+      - name: Upload dist to Amplify
+        run: |
+          # ZIP flow: client generates an AES key/IV, create-deployment returns
+          # a pre-signed upload URL, PUT the zip, then start-deployment.
+          # Bundle = prebuilt dist/ + amplify-deploy.yml renamed to amplify.yml
+          # (tells Amplify the bundle needs no build).
+          bundle="$(mktemp -d)"
+          cp -r dist "$bundle/dist"
+          cp amplify-deploy.yml "$bundle/amplify.yml"
+          (cd "$bundle" && zip -qr "$GITHUB_WORKSPACE/amplify-deploy.zip" .)
+          key="$(openssl rand -base64 32)"
+          iv="$(openssl rand -base64 16)"
+          keyhex="$(echo -n "$key" | base64 -d | xxd -p | tr -d '\n')"
+          ivhex="$(echo -n "$iv" | base64 -d | xxd -p | tr -d '\n')"
+          resp="$(aws amplify create-deployment \
+            --app-id d2378xfhyngm6g \
+            --branch-name main \
+            --file-encrypt-key "$key" \
+            --file-encrypt-iv "$iv")"
+          upload_url="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["uploadUrl"])')"
+          file_key="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["fileKey"])')"
+          # Amplify decrypts the artifact server-side with the key/IV above,
+          # so the upload must be AES-256-CBC ciphertext (same as amplify CLI).
+          openssl enc -aes-256-cbc -K "$keyhex" -iv "$ivhex" \
+            -in amplify-deploy.zip -out amplify-deploy.enc
+          curl -sf -X PUT -T amplify-deploy.enc "$upload_url"
+          aws amplify start-deployment --app-id d2378xfhyngm6g \
+            --branch-name main --file-key "$file_key" \
+            --query deployment.status --output text

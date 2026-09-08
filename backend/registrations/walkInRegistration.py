@@ -5,13 +5,14 @@ import re
 from shared.auth import audit, caller_from_event, iso_now
 from shared.db import events_table, registrations_table
 from shared.ids import new_id, registration_number
-from shared.response import bad_request, conflict, cors, ok, server_error
+from shared.response import bad_request, conflict, cors, ok, server_error, with_cors
 
 log = logging.getLogger()
 
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 
+@with_cors
 def handler(event, context):
     if event.get("httpMethod") == "OPTIONS":
         return cors()

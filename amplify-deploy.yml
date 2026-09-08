@@ -1,0 +1,16 @@
+# Build spec for manual ZIP deployments (see .github/workflows/deploy-frontend.yml):
+# the bundle is already built in CI, so Amplify just serves dist/ as-is.
+version: 1
+frontend:
+  phases:
+    build:
+      commands:
+        - echo "prebuilt bundle uploaded by GitHub Actions"
+  artifacts:
+    baseDirectory: dist
+    files:
+      - "**/*"
+customRules:
+  - source: "/<*>"
+    target: /index.html
+    status: "200"

@@ -8,7 +8,7 @@ import boto3
 from shared.auth import audit, iso_now
 from shared.db import EVENTS_TABLE, REGISTRATIONS_TABLE, events_table, registrations_table
 from shared.ids import new_id, registration_number
-from shared.response import bad_request, conflict, cors, not_found, ok, server_error
+from shared.response import bad_request, conflict, cors, not_found, ok, server_error, with_cors
 
 log = logging.getLogger()
 
@@ -28,6 +28,7 @@ def _valid_email(email):
     return bool(EMAIL_RE.match(email))
 
 
+@with_cors
 def handler(event, context):
     if event.get("httpMethod") == "OPTIONS":
         return cors()
