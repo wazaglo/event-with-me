@@ -460,8 +460,9 @@ const lambdas = {
     },
     SourceEmail: {
       Type: "String",
-      Default: "noreply@azubisuccess.space",
-      Description: "Verified SES sender identity for confirmation emails",
+      Default: "noreply@yourorg.com",
+      Description:
+        "Verified SES sender identity for confirmation emails; must be verified in SES before any mail is sent",
     },
   },
   Resources: lambdaResources,

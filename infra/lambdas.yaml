@@ -18,8 +18,8 @@
     },
     "SourceEmail": {
       "Type": "String",
-      "Default": "noreply@azubisuccess.space",
-      "Description": "Verified SES sender identity for confirmation emails"
+      "Default": "noreply@yourorg.com",
+      "Description": "Verified SES sender identity for confirmation emails; must be verified in SES before any mail is sent"
     }
   },
   "Resources": {
@@ -123,7 +123,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}createEvent-be3a78bb1ad8.zip"
+            "Fn::Sub": "${CodePrefix}createEvent.zip"
           }
         },
         "Environment": {
@@ -172,7 +172,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listEvents-ae2426f1383c.zip"
+            "Fn::Sub": "${CodePrefix}listEvents.zip"
           }
         },
         "Environment": {
@@ -221,7 +221,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getEvent-45f612f6f5a7.zip"
+            "Fn::Sub": "${CodePrefix}getEvent.zip"
           }
         },
         "Environment": {
@@ -270,7 +270,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateEvent-639891f7e8ed.zip"
+            "Fn::Sub": "${CodePrefix}updateEvent.zip"
           }
         },
         "Environment": {
@@ -319,7 +319,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}deleteEvent-e2165eb0d97b.zip"
+            "Fn::Sub": "${CodePrefix}deleteEvent.zip"
           }
         },
         "Environment": {
@@ -368,7 +368,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}registerParticipant-28810b27ffc8.zip"
+            "Fn::Sub": "${CodePrefix}registerParticipant.zip"
           }
         },
         "Environment": {
@@ -417,7 +417,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listRegistrations-998b70a1252e.zip"
+            "Fn::Sub": "${CodePrefix}listRegistrations.zip"
           }
         },
         "Environment": {
@@ -466,7 +466,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistrations-7e8f7cfa40c9.zip"
+            "Fn::Sub": "${CodePrefix}getRegistrations.zip"
           }
         },
         "Environment": {
@@ -515,7 +515,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistration-790927041744.zip"
+            "Fn::Sub": "${CodePrefix}getRegistration.zip"
           }
         },
         "Environment": {
@@ -564,7 +564,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateRegistration-48d2c6312de2.zip"
+            "Fn::Sub": "${CodePrefix}updateRegistration.zip"
           }
         },
         "Environment": {
@@ -613,7 +613,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}deleteRegistration-d8659ec0074f.zip"
+            "Fn::Sub": "${CodePrefix}deleteRegistration.zip"
           }
         },
         "Environment": {
@@ -662,7 +662,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}checkIn-40356f7e4c83.zip"
+            "Fn::Sub": "${CodePrefix}checkIn.zip"
           }
         },
         "Environment": {
@@ -711,7 +711,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}walkInRegistration-20fb1a58a445.zip"
+            "Fn::Sub": "${CodePrefix}walkInRegistration.zip"
           }
         },
         "Environment": {
@@ -760,7 +760,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}printBadge-c35ae26da0fe.zip"
+            "Fn::Sub": "${CodePrefix}printBadge.zip"
           }
         },
         "Environment": {
@@ -809,7 +809,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getAuditLog-de2b6f6586ab.zip"
+            "Fn::Sub": "${CodePrefix}getAuditLog.zip"
           }
         },
         "Environment": {
@@ -934,7 +934,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}sendConfirmationEmail-db7a63b87203.zip"
+            "Fn::Sub": "${CodePrefix}sendConfirmationEmail.zip"
           }
         },
         "Environment": {

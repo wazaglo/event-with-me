@@ -10,8 +10,10 @@ from shared.db import registrations_table
 
 log = logging.getLogger()
 
-# Fallback only; the CloudFormation stack injects SES_SOURCE_EMAIL.
-SOURCE_EMAIL = os.environ.get("SES_SOURCE_EMAIL") or "noreply@azubisuccess.space"
+# Set by the CloudFormation stack (SourceEmail parameter). There is no
+# hardcoded default: the sender must be a verified SES identity, and a
+# missing value should fail loudly instead of bouncing silently.
+SOURCE_EMAIL = os.environ.get("SES_SOURCE_EMAIL", "")
 
 _ses = None
 
@@ -80,6 +82,8 @@ def format_date(event_date):
 def _publish(payload):
     """Send the confirmation email via SES. Raises on any SES error so the
     SNS-triggered Lambda retry (and eventually the DLQ) kicks in."""
+    if not SOURCE_EMAIL:
+        raise RuntimeError("SES_SOURCE_EMAIL is not set; refusing to send")
     email = payload["email"]
     full_name = payload["fullName"]
     reg_number = payload["registrationNumber"]
