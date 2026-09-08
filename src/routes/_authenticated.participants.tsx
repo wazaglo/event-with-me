@@ -2,7 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Search, CheckCircle2, Clock, Printer, Pencil, Trash2, Filter, CalendarDays } from "lucide-react";
+import {
+  Search,
+  CheckCircle2,
+  Clock,
+  Printer,
+  Pencil,
+  Trash2,
+  Filter,
+  CalendarDays,
+} from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -12,10 +21,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCurrentStaff } from "@/lib/hooks/use-auth";
 
@@ -64,7 +86,9 @@ function ParticipantsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Registration Desk</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+            Registration Desk
+          </div>
           <h1 className="mt-1 text-3xl font-bold">All registrations</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -76,13 +100,17 @@ function ParticipantsPage() {
               </SelectTrigger>
               <SelectContent>
                 {events.map((e) => (
-                  <SelectItem key={e.eventId} value={e.eventId}>{e.name}</SelectItem>
+                  <SelectItem key={e.eventId} value={e.eventId}>
+                    {e.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
           <Link to="/walk-in">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">+ Register walk-in</Button>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+              + Register walk-in
+            </Button>
           </Link>
         </div>
       </div>
@@ -101,7 +129,9 @@ function ParticipantsPage() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={type} onValueChange={setType}>
-              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All types</SelectItem>
                 <SelectItem value="online">Online</SelectItem>
@@ -109,7 +139,9 @@ function ParticipantsPage() {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All status</SelectItem>
                 <SelectItem value="checked">Checked in</SelectItem>
@@ -139,13 +171,17 @@ function ParticipantsPage() {
               {query.isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="border-b border-border last:border-0">
-                    <td colSpan={8} className="p-3"><Skeleton className="h-8 w-full" /></td>
+                    <td colSpan={8} className="p-3">
+                      <Skeleton className="h-8 w-full" />
+                    </td>
                   </tr>
                 ))
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-16 text-center text-sm text-muted-foreground">
-                    {activeEventId ? "No participants match your filters." : "Select an event to view participants."}
+                    {activeEventId
+                      ? "No participants match your filters."
+                      : "Select an event to view participants."}
                   </td>
                 </tr>
               ) : (
@@ -157,10 +193,14 @@ function ParticipantsPage() {
                     transition={{ delay: Math.min(i * 0.01, 0.15) }}
                     className="border-b border-border last:border-0 hover:bg-secondary/40"
                   >
-                    <td className="px-4 py-3 font-mono text-xs font-semibold text-primary">{r.registrationNumber}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold text-primary">
+                      {r.registrationNumber}
+                    </td>
                     <td className="px-4 py-3 font-medium">{r.fullName}</td>
                     <td className="px-4 py-3 text-muted-foreground">{r.organisation}</td>
-                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{r.email}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                      {r.email}
+                    </td>
                     <td className="px-4 py-3">
                       <Badge variant={r.registrationType === "walk_in" ? "secondary" : "outline"}>
                         {r.registrationType === "walk_in" ? "Walk-in" : "Online"}
@@ -183,15 +223,24 @@ function ParticipantsPage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1.5">
                         <Link to="/badge/$id" params={{ id: r.registrationId }}>
-                          <Button variant="ghost" size="icon" title="Print badge"><Printer className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" title="Print badge">
+                            <Printer className="h-4 w-4" />
+                          </Button>
                         </Link>
                         <Link to="/participants/$id" params={{ id: r.registrationId }}>
-                          <Button variant="ghost" size="icon" title="Edit"><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                         </Link>
                         {staff.isAdmin && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" title="Delete" className="text-destructive hover:text-destructive">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Delete"
+                                className="text-destructive hover:text-destructive"
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -199,7 +248,9 @@ function ParticipantsPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete participant?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  This will permanently remove <span className="font-semibold">{r.fullName}</span> ({r.registrationNumber}).
+                                  This will permanently remove{" "}
+                                  <span className="font-semibold">{r.fullName}</span> (
+                                  {r.registrationNumber}).
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

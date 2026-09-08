@@ -12,7 +12,13 @@ import { useEvents } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCurrentStaff } from "@/lib/hooks/use-auth";
 import { getSession } from "@/lib/auth/cognito-client";
 
@@ -106,13 +112,21 @@ function WalkInPage() {
               <div className="rounded-full bg-accent/20 p-2">
                 <CheckCircle2 className="h-6 w-6 text-accent" />
               </div>
-              <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Registration complete</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
+                Registration complete
+              </div>
             </div>
-            <h1 className="mt-4 text-3xl font-bold md:text-4xl">{successInfo.name} is registered</h1>
+            <h1 className="mt-4 text-3xl font-bold md:text-4xl">
+              {successInfo.name} is registered
+            </h1>
           </div>
           <div className="p-10">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Registration number</div>
-            <div className="mt-1 text-4xl font-black tracking-tight text-primary md:text-5xl">{successInfo.reg}</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Registration number
+            </div>
+            <div className="mt-1 text-4xl font-black tracking-tight text-primary md:text-5xl">
+              {successInfo.reg}
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 border-t border-border bg-secondary/30 p-6">
             <Button
@@ -128,7 +142,9 @@ function WalkInPage() {
             >
               <Printer className="mr-2 h-4 w-4" /> Print badge
             </Button>
-            <p className="text-xs text-muted-foreground">Continuing automatically in a few seconds…</p>
+            <p className="text-xs text-muted-foreground">
+              Continuing automatically in a few seconds…
+            </p>
           </div>
         </motion.div>
       </div>
@@ -138,19 +154,27 @@ function WalkInPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Reception</div>
+        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+          Reception
+        </div>
         <h1 className="mt-1 text-3xl font-bold">Register walk-in</h1>
-        <p className="mt-1 text-muted-foreground">Fast entry - press Tab between fields and Enter to submit.</p>
+        <p className="mt-1 text-muted-foreground">
+          Fast entry - press Tab between fields and Enter to submit.
+        </p>
       </div>
 
       {events.length > 1 && (
         <div className="flex items-center gap-3">
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
           <Select value={activeEventId} onValueChange={setSelectedEventId}>
-            <SelectTrigger className="w-[240px]"><SelectValue placeholder="Select event" /></SelectTrigger>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Select event" />
+            </SelectTrigger>
             <SelectContent>
               {events.map((e) => (
-                <SelectItem key={e.eventId} value={e.eventId}>{e.name}</SelectItem>
+                <SelectItem key={e.eventId} value={e.eventId}>
+                  {e.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -166,16 +190,25 @@ function WalkInPage() {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="md:col-span-2">
             <Label className="mb-1.5 block text-base font-semibold">Full name *</Label>
-            <Input autoFocus className="h-12 text-lg" placeholder="e.g. Kwame Boateng" {...form.register("fullName")} />
+            <Input
+              autoFocus
+              className="h-12 text-lg"
+              placeholder="e.g. Kwame Boateng"
+              {...form.register("fullName")}
+            />
             {form.formState.errors.fullName && (
-              <p className="mt-1 text-xs text-destructive">{form.formState.errors.fullName.message}</p>
+              <p className="mt-1 text-xs text-destructive">
+                {form.formState.errors.fullName.message}
+              </p>
             )}
           </div>
           <div>
             <Label className="mb-1.5 block text-sm">Organisation *</Label>
             <Input className="h-11" {...form.register("organisation")} />
             {form.formState.errors.organisation && (
-              <p className="mt-1 text-xs text-destructive">{form.formState.errors.organisation.message}</p>
+              <p className="mt-1 text-xs text-destructive">
+                {form.formState.errors.organisation.message}
+              </p>
             )}
           </div>
           <div>
@@ -195,16 +228,20 @@ function WalkInPage() {
           </div>
         </div>
         <div className="mt-8 flex flex-wrap justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>Reset</Button>
+          <Button type="button" variant="outline" onClick={() => form.reset()}>
+            Reset
+          </Button>
           <Button
             type="submit"
             size="lg"
             disabled={form.formState.isSubmitting}
             className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
           >
-            {form.formState.isSubmitting
-              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              : <UserPlus className="mr-2 h-4 w-4" />}
+            {form.formState.isSubmitting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <UserPlus className="mr-2 h-4 w-4" />
+            )}
             Register & print badge
           </Button>
         </div>

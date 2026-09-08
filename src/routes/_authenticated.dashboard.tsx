@@ -6,7 +6,13 @@ import { registrationsApi, auditApi } from "@/lib/api-client";
 import { useEvents } from "@/components/logo";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -30,9 +36,11 @@ function Dashboard() {
       const today = all.filter((r) => {
         const d = new Date(r.createdAt);
         const now = new Date();
-        return d.getFullYear() === now.getFullYear() &&
+        return (
+          d.getFullYear() === now.getFullYear() &&
           d.getMonth() === now.getMonth() &&
-          d.getDate() === now.getDate();
+          d.getDate() === now.getDate()
+        );
       });
       return {
         total: all.length,
@@ -52,18 +60,45 @@ function Dashboard() {
   });
 
   const cards = [
-    { label: "Total participants", value: stats.data?.total, icon: Users, tone: "bg-primary/10 text-primary" },
-    { label: "Checked in", value: stats.data?.checkedIn, icon: CheckCircle2, tone: "bg-success/15 text-success" },
-    { label: "Pending check-in", value: stats.data?.pending, icon: Clock, tone: "bg-accent/25 text-primary" },
-    { label: "Walk-ins", value: stats.data?.walkIns, icon: UserPlus, tone: "bg-secondary text-primary" },
-    { label: "Today", value: stats.data?.today, icon: TrendingUp, tone: "bg-primary/10 text-primary" },
+    {
+      label: "Total participants",
+      value: stats.data?.total,
+      icon: Users,
+      tone: "bg-primary/10 text-primary",
+    },
+    {
+      label: "Checked in",
+      value: stats.data?.checkedIn,
+      icon: CheckCircle2,
+      tone: "bg-success/15 text-success",
+    },
+    {
+      label: "Pending check-in",
+      value: stats.data?.pending,
+      icon: Clock,
+      tone: "bg-accent/25 text-primary",
+    },
+    {
+      label: "Walk-ins",
+      value: stats.data?.walkIns,
+      icon: UserPlus,
+      tone: "bg-secondary text-primary",
+    },
+    {
+      label: "Today",
+      value: stats.data?.today,
+      icon: TrendingUp,
+      tone: "bg-primary/10 text-primary",
+    },
   ];
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Overview</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+            Overview
+          </div>
           <h1 className="mt-1 text-3xl font-bold">Live event dashboard</h1>
         </div>
         {events.length > 1 && (
@@ -74,7 +109,9 @@ function Dashboard() {
             </SelectTrigger>
             <SelectContent>
               {events.map((e) => (
-                <SelectItem key={e.eventId} value={e.eventId}>{e.name}</SelectItem>
+                <SelectItem key={e.eventId} value={e.eventId}>
+                  {e.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -92,10 +129,14 @@ function Dashboard() {
               transition={{ delay: i * 0.04 }}
               className="rounded-2xl border border-border bg-card p-5 shadow-soft"
             >
-              <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${c.tone}`}>
+              <div
+                className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${c.tone}`}
+              >
                 <Icon className="h-4 w-4" />
               </div>
-              <div className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{c.label}</div>
+              <div className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {c.label}
+              </div>
               {stats.isLoading ? (
                 <Skeleton className="mt-2 h-8 w-16" />
               ) : (
@@ -112,7 +153,8 @@ function Dashboard() {
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="font-medium">Check-in progress</span>
             <span className="tabular-nums text-muted-foreground">
-              {stats.data!.checkedIn} / {stats.data!.total} ({Math.round((stats.data!.checkedIn / stats.data!.total) * 100)}%)
+              {stats.data!.checkedIn} / {stats.data!.total} (
+              {Math.round((stats.data!.checkedIn / stats.data!.total) * 100)}%)
             </span>
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-secondary">
@@ -145,7 +187,8 @@ function Dashboard() {
                 <div>
                   <div className="text-sm font-medium">{prettyAction(a.action)}</div>
                   <div className="text-xs text-muted-foreground">
-                    {a.actorLabel ?? "System"} · {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
+                    {a.actorLabel ?? "System"} ·{" "}
+                    {formatDistanceToNow(new Date(a.createdAt), { addSuffix: true })}
                   </div>
                 </div>
               </div>

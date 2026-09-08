@@ -18,7 +18,8 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
 
-  --font-display: "Century Gothic", "URW Gothic", "Avant Garde", "Nunito Sans", system-ui, sans-serif;
+  --font-display:
+    "Century Gothic", "URW Gothic", "Avant Garde", "Nunito Sans", system-ui, sans-serif;
   --font-sans: "Century Gothic", "URW Gothic", "Avant Garde", "Nunito Sans", system-ui, sans-serif;
 
   --color-background: var(--background);
@@ -112,7 +113,8 @@
   --sidebar-border: oklch(0.4 0.05 176);
   --sidebar-ring: oklch(0.88 0.19 96);
 
-  --gradient-hero: radial-gradient(1200px 600px at 10% -10%, oklch(0.55 0.09 176 / 0.35), transparent 60%),
+  --gradient-hero:
+    radial-gradient(1200px 600px at 10% -10%, oklch(0.55 0.09 176 / 0.35), transparent 60%),
     radial-gradient(900px 500px at 100% 0%, oklch(0.88 0.19 96 / 0.18), transparent 55%),
     linear-gradient(180deg, oklch(0.32 0.055 176), oklch(0.24 0.045 176));
   --gradient-card: linear-gradient(180deg, oklch(1 0 0), oklch(0.985 0.005 176));
@@ -154,21 +156,40 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { font-family: var(--font-sans); }
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    font-family: var(--font-sans);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4, h5 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
 }
 
-@utility bg-hero-gradient { background-image: var(--gradient-hero); }
-@utility bg-card-gradient { background-image: var(--gradient-card); }
-@utility shadow-elegant { box-shadow: var(--shadow-elegant); }
-@utility shadow-soft { box-shadow: var(--shadow-soft); }
+@utility bg-hero-gradient {
+  background-image: var(--gradient-hero);
+}
+@utility bg-card-gradient {
+  background-image: var(--gradient-card);
+}
+@utility shadow-elegant {
+  box-shadow: var(--shadow-elegant);
+}
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
 
 /* ============================================================
    BADGE PRINT - 100mm x 60mm landscape, XPrinter XP-DT427B
@@ -185,11 +206,33 @@
 }
 
 @media print {
-  @page { size: 100mm 60mm landscape; margin: 0; }
-  html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
-  body * { visibility: hidden !important; }
-  .print-area, .print-area * { visibility: visible !important; }
-  .print-area { position: absolute; left: 0; top: 0; }
-  .no-print { display: none !important; }
-  .badge-card { box-shadow: none !important; page-break-after: always; }
+  @page {
+    size: 100mm 60mm landscape;
+    margin: 0;
+  }
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .badge-card {
+    box-shadow: none !important;
+    page-break-after: always;
+  }
 }

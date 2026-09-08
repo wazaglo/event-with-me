@@ -56,7 +56,14 @@ export const ParticipantBadge = forwardRef<HTMLDivElement, Props>(function Parti
         }}
       >
         {/* Left: logo + type chip */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <img
             src={logo}
             alt=""
@@ -93,7 +100,15 @@ export const ParticipantBadge = forwardRef<HTMLDivElement, Props>(function Parti
             {settings.event_name}
           </div>
 
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 0 }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              minWidth: 0,
+            }}
+          >
             <div
               style={{
                 fontSize: `${Math.max(settings.badge_font_size ?? 16, 12) * 0.38}mm`,
@@ -142,7 +157,10 @@ export const ParticipantBadge = forwardRef<HTMLDivElement, Props>(function Parti
             {settings.show_qr ? (
               <div style={{ background: "white", padding: "0.5mm" }}>
                 <QRCodeSVG
-                  value={JSON.stringify({ id: participant.id, reg: participant.registration_number })}
+                  value={JSON.stringify({
+                    id: participant.id,
+                    reg: participant.registration_number,
+                  })}
                   size={56}
                   bgColor="#ffffff"
                   fgColor={settings.primary_color}

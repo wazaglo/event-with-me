@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, CheckCircle2, Clock, Printer, ArrowRight, CalendarDays, Loader2 } from "lucide-react";
+import {
+  Search,
+  CheckCircle2,
+  Clock,
+  Printer,
+  ArrowRight,
+  CalendarDays,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -10,7 +18,13 @@ import { useEvents } from "@/components/logo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/check-in")({
   head: () => ({ meta: [{ title: "Check-in - Summit Console" }] }),
@@ -32,7 +46,12 @@ function CheckInPage() {
     queryFn: () => registrationsApi.list(activeEventId, { search: debounced }),
   });
 
-  const checkInAndPrint = async (id: string, fullName: string, checkedInAt: string | null, printAfter: boolean) => {
+  const checkInAndPrint = async (
+    id: string,
+    fullName: string,
+    checkedInAt: string | null,
+    printAfter: boolean,
+  ) => {
     if (checkedInAt) {
       if (printAfter) window.open(`/badge/${id}?auto=1`, "_blank");
       return;
@@ -54,9 +73,13 @@ function CheckInPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="text-center">
-        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Reception mode</div>
+        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+          Reception mode
+        </div>
         <h1 className="mt-2 text-4xl font-bold">Check in a delegate</h1>
-        <p className="mt-1 text-muted-foreground">Type any name, organisation, email or registration number.</p>
+        <p className="mt-1 text-muted-foreground">
+          Type any name, organisation, email or registration number.
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -68,7 +91,9 @@ function CheckInPage() {
             </SelectTrigger>
             <SelectContent>
               {events.map((e) => (
-                <SelectItem key={e.eventId} value={e.eventId}>{e.name}</SelectItem>
+                <SelectItem key={e.eventId} value={e.eventId}>
+                  {e.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -94,7 +119,9 @@ function CheckInPage() {
             Start typing to find a delegate.
           </p>
         ) : results.isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)
+          Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          ))
         ) : rows.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
             No matches found.
@@ -127,11 +154,15 @@ function CheckInPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link to="/participants/$id" params={{ id: p.registrationId }}>
-                  <Button variant="ghost">Open <ArrowRight className="ml-1.5 h-4 w-4" /></Button>
+                  <Button variant="ghost">
+                    Open <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
                 </Link>
                 {!p.checkedInAt && (
                   <Button
-                    onClick={() => checkInAndPrint(p.registrationId, p.fullName, p.checkedInAt, false)}
+                    onClick={() =>
+                      checkInAndPrint(p.registrationId, p.fullName, p.checkedInAt, false)
+                    }
                     className="bg-success text-success-foreground hover:bg-success/90"
                   >
                     <CheckCircle2 className="mr-2 h-4 w-4" /> Check in
@@ -141,7 +172,8 @@ function CheckInPage() {
                   onClick={() => checkInAndPrint(p.registrationId, p.fullName, p.checkedInAt, true)}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  <Printer className="mr-2 h-4 w-4" /> {p.checkedInAt ? "Print badge" : "Check in & print"}
+                  <Printer className="mr-2 h-4 w-4" />{" "}
+                  {p.checkedInAt ? "Print badge" : "Check in & print"}
                 </Button>
               </div>
             </motion.div>

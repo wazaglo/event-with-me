@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, dvlp]
     paths:
-      - "backend/**/*.mjs"
+      - "backend/**/*.py"
 
 jobs:
   test:
@@ -14,13 +14,13 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-      - run: npm test
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest tests -q
 
   deploy:
     runs-on: ubuntu-latest
@@ -28,21 +28,38 @@ jobs:
     strategy:
       matrix:
         function:
-          - { name: createEvent-prod, file: backend/events/createEvent.mjs }
-          - { name: listEvents-prod, file: backend/events/listEvents.mjs }
-          - { name: updateEvent-prod, file: backend/events/updateEvent.mjs }
-          - { name: getEvent-prod, file: backend/events/getEvent.mjs }
-          - { name: deleteEvent-prod, file: backend/events/deleteEvent.mjs }
-          - { name: registerParticipant-prod, file: backend/registrations/registerParticipant.mjs }
-          - { name: listRegistrations-prod, file: backend/registrations/listRegistrations.mjs }
-          - { name: getRegistrations-prod, file: backend/registrations/getRegistrations.mjs }
-          - { name: deleteRegistration-prod, file: backend/registrations/deleteRegistration.mjs }
-          - { name: checkIn-prod, file: backend/registrations/checkIn.mjs }
-          - { name: walkInRegistration-prod, file: backend/registrations/walkInRegistration.mjs }
-          - { name: updateRegistration-prod, file: backend/registrations/updateRegistration.mjs }
-          - { name: printBadge-prod, file: backend/registrations/printBadge.mjs }
-          - { name: getAuditLog-prod, file: backend/registrations/getAuditLog.mjs }
-          - { name: ticketProcessing-prod, file: backend/registrations/ticketProcessing.mjs }
+          - { name: event-with-me-CreateEvent, file: backend/events/createEvent.py }
+          - { name: event-with-me-ListEvents, file: backend/events/listEvents.py }
+          - { name: event-with-me-UpdateEvent, file: backend/events/updateEvent.py }
+          - { name: event-with-me-GetEvent, file: backend/events/getEvent.py }
+          - { name: event-with-me-DeleteEvent, file: backend/events/deleteEvent.py }
+          - {
+              name: event-with-me-RegisterParticipant,
+              file: backend/registrations/registerParticipant.py,
+            }
+          - {
+              name: event-with-me-ListRegistrations,
+              file: backend/registrations/listRegistrations.py,
+            }
+          - {
+              name: event-with-me-GetRegistrations,
+              file: backend/registrations/getRegistrations.py,
+            }
+          - {
+              name: event-with-me-DeleteRegistration,
+              file: backend/registrations/deleteRegistration.py,
+            }
+          - { name: event-with-me-CheckIn, file: backend/registrations/checkIn.py }
+          - {
+              name: event-with-me-WalkInRegistration,
+              file: backend/registrations/walkInRegistration.py,
+            }
+          - {
+              name: event-with-me-UpdateRegistration,
+              file: backend/registrations/updateRegistration.py,
+            }
+          - { name: event-with-me-PrintBadge, file: backend/registrations/printBadge.py }
+          - { name: event-with-me-GetAuditLog, file: backend/registrations/getAuditLog.py }
 
     steps:
       - uses: actions/checkout@v4
@@ -54,11 +71,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Switch ${{ matrix.function.name }} to python3.13
+        run: |
+          aws lambda update-function-configuration \
+            --function-name ${{ matrix.function.name }} \
+            --runtime python3.13
+          aws lambda wait function-updated \
+            --function-name ${{ matrix.function.name }}
+
       - name: Zip and deploy ${{ matrix.function.name }}
         run: |
           mkdir -p /tmp/function/shared
           cp ${{ matrix.function.file }} /tmp/function/
-          cp backend/shared/*.mjs /tmp/function/shared/
+          cp backend/shared/*.py /tmp/function/shared/
           cd /tmp/function
           zip -r /tmp/deploy.zip .
           aws lambda update-function-code \
@@ -66,15 +91,3 @@ jobs:
             --zip-file fileb:///tmp/deploy.zip
           aws lambda wait function-updated \
             --function-name ${{ matrix.function.name }}
-          aws lambda update-function-configuration \
-            --function-name ${{ matrix.function.name }} \
-            --environment "Variables={\
-              ALLOWED_ORIGIN=${{ secrets.ALLOWED_ORIGIN }},\
-              EVENTS_TABLE=events-prod,\
-              REGISTRATIONS_TABLE=registrations-prod,\
-              AUDIT_TABLE=audit-logs-prod,\
-              REGISTRATION_QUEUE_URL=https://sqs.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.AWS_ACCOUNT_ID }}/registration-queue-prod,\
-              SES_SOURCE_EMAIL=${{ secrets.SES_SOURCE_EMAIL }},\
-              SNS_TOPIC_ARN=arn:aws:sns:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:event-confirmations-prod,\
-              SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}\
-            }"

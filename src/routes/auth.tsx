@@ -22,16 +22,20 @@ const forgotSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
 });
 
-const newPasswordSchema = z.object({
-  password: z.string().min(8, "Minimum 8 characters"),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const newPasswordSchema = z
+  .object({
+    password: z.string().min(8, "Minimum 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Staff sign in - Summit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Staff sign in - Summit" }, { name: "robots", content: "noindex" }],
+  }),
   component: AuthPage,
 });
 
@@ -47,7 +51,11 @@ function AuthPage() {
   }, [navigate]);
 
   const form = useForm<z.infer<typeof signInSchema>>({
-    resolver: zodResolver(mode === "sign_in" ? signInSchema : mode === "forgot" ? forgotSchema : newPasswordSchema) as never,
+    resolver: (mode === "sign_in"
+      ? zodResolver(signInSchema)
+      : mode === "forgot"
+        ? zodResolver(forgotSchema)
+        : zodResolver(newPasswordSchema)) as never,
     defaultValues: { email: "", password: "" },
   });
 
@@ -88,7 +96,10 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       <div className="relative hidden overflow-hidden bg-hero-gradient p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <Link to="/" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs backdrop-blur">
+        <Link
+          to="/"
+          className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs backdrop-blur"
+        >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to public site
         </Link>
         <div>
@@ -97,7 +108,8 @@ function AuthPage() {
             {settings?.name ?? "Event Registration System"}
           </h1>
           <p className="mt-4 max-w-md text-white/85">
-            Coordinator console - register walk-ins, check delegates in, and print badges on arrival.
+            Coordinator console - register walk-ins, check delegates in, and print badges on
+            arrival.
           </p>
         </div>
         <div className="text-xs text-white/70">Powered by AWS</div>
@@ -114,17 +126,25 @@ function AuthPage() {
             <div className="text-sm font-semibold">{settings?.name ?? "Event System"}</div>
           </div>
           <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
-            {mode === "sign_in" ? "Staff sign in" : mode === "forgot" ? "Reset password" : "Set new password"}
+            {mode === "sign_in"
+              ? "Staff sign in"
+              : mode === "forgot"
+                ? "Reset password"
+                : "Set new password"}
           </div>
           <h2 className="mt-2 text-2xl font-bold">
-            {mode === "sign_in" ? "Welcome back" : mode === "forgot" ? "Forgot your password?" : "Create your password"}
+            {mode === "sign_in"
+              ? "Welcome back"
+              : mode === "forgot"
+                ? "Forgot your password?"
+                : "Create your password"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "sign_in"
               ? "Sign in to access the coordinator console."
               : mode === "forgot"
-              ? "Enter your email and we'll send a reset code."
-              : "Your account requires a new password before you can continue."}
+                ? "Enter your email and we'll send a reset code."
+                : "Your account requires a new password before you can continue."}
           </p>
 
           {mode === "new_password" && (
@@ -137,9 +157,16 @@ function AuthPage() {
             {mode !== "new_password" && (
               <div>
                 <Label className="mb-1.5 block text-sm">Email</Label>
-                <Input type="email" autoComplete="email" placeholder="you@work.com" {...form.register("email")} />
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@work.com"
+                  {...form.register("email")}
+                />
                 {form.formState.errors.email && (
-                  <p className="mt-1 text-xs text-destructive">{form.formState.errors.email.message}</p>
+                  <p className="mt-1 text-xs text-destructive">
+                    {form.formState.errors.email.message}
+                  </p>
                 )}
               </div>
             )}
@@ -155,7 +182,9 @@ function AuthPage() {
                   {...form.register("password")}
                 />
                 {form.formState.errors.password && (
-                  <p className="mt-1 text-xs text-destructive">{form.formState.errors.password.message}</p>
+                  <p className="mt-1 text-xs text-destructive">
+                    {form.formState.errors.password.message}
+                  </p>
                 )}
               </div>
             )}
@@ -168,9 +197,13 @@ function AuthPage() {
                   placeholder="••••••••"
                   {...form.register("confirmPassword" as never)}
                 />
-                {(form.formState.errors as Record<string, { message?: string }>).confirmPassword && (
+                {(form.formState.errors as Record<string, { message?: string }>)
+                  .confirmPassword && (
                   <p className="mt-1 text-xs text-destructive">
-                    {(form.formState.errors as Record<string, { message?: string }>).confirmPassword?.message}
+                    {
+                      (form.formState.errors as Record<string, { message?: string }>)
+                        .confirmPassword?.message
+                    }
                   </p>
                 )}
               </div>
@@ -182,7 +215,11 @@ function AuthPage() {
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === "sign_in" ? "Sign in" : mode === "forgot" ? "Send reset code" : "Set password & sign in"}
+              {mode === "sign_in"
+                ? "Sign in"
+                : mode === "forgot"
+                  ? "Send reset code"
+                  : "Set password & sign in"}
             </Button>
           </form>
 

@@ -1,0 +1,123 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "event-with-me authentication (Cognito) stack",
+  "Resources": {
+    "UserPool": {
+      "Type": "AWS::Cognito::UserPool",
+      "Properties": {
+        "UserPoolName": {
+          "Fn::Sub": "event-with-me-users"
+        },
+        "AutoVerifiedAttributes": [
+          "email"
+        ],
+        "UsernameAttributes": [
+          "email"
+        ],
+        "Policies": {
+          "PasswordPolicy": {
+            "MinimumLength": 8,
+            "RequireUppercase": true,
+            "RequireLowercase": true,
+            "RequireNumbers": true,
+            "RequireSymbols": false
+          }
+        },
+        "Schema": [
+          {
+            "Name": "email",
+            "AttributeDataType": "String",
+            "Required": true,
+            "Mutable": true
+          },
+          {
+            "Name": "name",
+            "AttributeDataType": "String",
+            "Required": false,
+            "Mutable": true
+          },
+          {
+            "Name": "phone_number",
+            "AttributeDataType": "String",
+            "Required": false,
+            "Mutable": true
+          }
+        ]
+      }
+    },
+    "UserPoolClient": {
+      "Type": "AWS::Cognito::UserPoolClient",
+      "Properties": {
+        "ClientName": "EventRegistrationUserPool",
+        "UserPoolId": {
+          "Ref": "UserPool"
+        },
+        "ExplicitAuthFlows": [
+          "ALLOW_USER_PASSWORD_AUTH",
+          "ALLOW_REFRESH_TOKEN_AUTH",
+          "ALLOW_USER_SRP_AUTH"
+        ],
+        "GenerateSecret": false
+      }
+    },
+    "AdminGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "GroupName": "Admin",
+        "UserPoolId": {
+          "Ref": "UserPool"
+        },
+        "Description": "Full system access"
+      }
+    },
+    "RegOfficerGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "GroupName": "RegistrationOfficer",
+        "UserPoolId": {
+          "Ref": "UserPool"
+        },
+        "Description": "Walk-in + participants"
+      }
+    },
+    "CheckinOfficerGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "GroupName": "CheckinOfficer",
+        "UserPoolId": {
+          "Ref": "UserPool"
+        },
+        "Description": "Check-in only"
+      }
+    }
+  },
+  "Outputs": {
+    "UserPoolId": {
+      "Value": {
+        "Ref": "UserPool"
+      },
+      "Export": {
+        "Name": "event-with-me-auth-UserPoolId"
+      }
+    },
+    "UserPoolArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "UserPool",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-auth-UserPoolArn"
+      }
+    },
+    "UserPoolClientId": {
+      "Value": {
+        "Ref": "UserPoolClient"
+      },
+      "Export": {
+        "Name": "event-with-me-auth-UserPoolClientId"
+      }
+    }
+  }
+}

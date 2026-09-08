@@ -46,7 +46,6 @@ export function SiteHeader() {
         )}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
-
           {/* Logo + Brand */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="relative">
@@ -56,10 +55,12 @@ export function SiteHeader() {
               <div className="text-[10px] font-bold uppercase tracking-widest text-primary">
                 National Banking College
               </div>
-              <div className={cn(
-                "text-sm font-semibold transition-colors",
-                scrolled || !isHome ? "text-foreground" : "text-foreground",
-              )}>
+              <div
+                className={cn(
+                  "text-sm font-semibold transition-colors",
+                  scrolled || !isHome ? "text-foreground" : "text-foreground",
+                )}
+              >
                 {eventName}
               </div>
             </div>
@@ -80,8 +81,8 @@ export function SiteHeader() {
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-2">
-            {!loading && (
-              isStaff ? (
+            {!loading &&
+              (isStaff ? (
                 <Link to="/dashboard">
                   <Button size="sm" variant="outline" className="gap-2 font-medium">
                     <LayoutDashboard className="h-3.5 w-3.5" />
@@ -90,15 +91,21 @@ export function SiteHeader() {
                 </Link>
               ) : (
                 <Link to="/auth">
-                  <Button size="sm" variant="ghost" className="gap-2 font-medium text-foreground/70 hover:text-foreground">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-2 font-medium text-foreground/70 hover:text-foreground"
+                  >
                     <LogIn className="h-3.5 w-3.5" />
                     Staff sign in
                   </Button>
                 </Link>
-              )
-            )}
+              ))}
             <Link to="/register">
-              <Button size="sm" className="gap-2 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm">
+              <Button
+                size="sm"
+                className="gap-2 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm"
+              >
                 <Ticket className="h-3.5 w-3.5" />
                 Register now
               </Button>
@@ -149,23 +156,28 @@ export function SiteHeader() {
                 ))}
 
                 <div className="pt-2 border-t border-border/40 space-y-2">
-                  {!loading && (
-                    isStaff ? (
+                  {!loading &&
+                    (isStaff ? (
                       <Link to="/dashboard" onClick={() => setOpen(false)}>
-                        <Button variant="outline" className="w-full justify-start gap-2 font-medium">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start gap-2 font-medium"
+                        >
                           <LayoutDashboard className="h-4 w-4" />
                           Go to Dashboard
                         </Button>
                       </Link>
                     ) : (
                       <Link to="/auth" onClick={() => setOpen(false)}>
-                        <Button variant="outline" className="w-full justify-start gap-2 font-medium">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start gap-2 font-medium"
+                        >
                           <LogIn className="h-4 w-4" />
                           Staff sign in
                         </Button>
                       </Link>
-                    )
-                  )}
+                    ))}
                   <Link to="/register" onClick={() => setOpen(false)}>
                     <Button className="w-full justify-start gap-2 bg-primary font-semibold text-primary-foreground hover:bg-primary/90">
                       <Ticket className="h-4 w-4" />
@@ -190,7 +202,6 @@ export function SiteFooter() {
     <footer className="border-t border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-4 py-10 md:px-6">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-
           {/* Brand */}
           <div className="flex items-center gap-3">
             <Logo className="h-10 w-10 rounded-full ring-2 ring-primary/20" />
@@ -202,9 +213,15 @@ export function SiteFooter() {
 
           {/* Links */}
           <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted-foreground">
-            <a href="/#about" className="hover:text-foreground transition-colors">About</a>
-            <Link to="/register" className="hover:text-foreground transition-colors">Register</Link>
-            <Link to="/auth" className="hover:text-foreground transition-colors">Staff portal</Link>
+            <a href="/#about" className="hover:text-foreground transition-colors">
+              About
+            </a>
+            <Link to="/register" className="hover:text-foreground transition-colors">
+              Register
+            </Link>
+            <Link to="/auth" className="hover:text-foreground transition-colors">
+              Staff portal
+            </Link>
           </div>
         </div>
 

@@ -69,7 +69,8 @@ export function signIn(email: string, password: string): Promise<CognitoSession>
         pendingNewPasswordUser = user;
         // Strip non-writable Cognito fields, ensure name is always present
         const { email_verified, phone_number_verified, ...writableAttrs } = userAttributes;
-        void email_verified; void phone_number_verified;
+        void email_verified;
+        void phone_number_verified;
         if (!writableAttrs.name) writableAttrs.name = writableAttrs.email ?? email;
         pendingUserAttributes = writableAttrs;
         reject(new Error("NEW_PASSWORD_REQUIRED"));
@@ -115,19 +116,28 @@ export function getSession(): Promise<CognitoSession | null> {
     const user = userPool.getCurrentUser();
     if (!user) return resolve(null);
 
-    user.getSession((err: Error | null, session: { isValid: () => boolean; getIdToken: () => { getJwtToken: () => string }; getAccessToken: () => { getJwtToken: () => string } } | null) => {
-      if (err || !session || !session.isValid()) return resolve(null);
-      const idToken = session.getIdToken().getJwtToken();
-      const payload = parsePayload(idToken);
-      resolve({
-        idToken,
-        accessToken: session.getAccessToken().getJwtToken(),
-        email: payload.email ?? "",
-        name: payload.name ?? payload.email ?? "",
-        groups: parseGroups(idToken),
-        sub: payload.sub ?? "",
-      });
-    });
+    user.getSession(
+      (
+        err: Error | null,
+        session: {
+          isValid: () => boolean;
+          getIdToken: () => { getJwtToken: () => string };
+          getAccessToken: () => { getJwtToken: () => string };
+        } | null,
+      ) => {
+        if (err || !session || !session.isValid()) return resolve(null);
+        const idToken = session.getIdToken().getJwtToken();
+        const payload = parsePayload(idToken);
+        resolve({
+          idToken,
+          accessToken: session.getAccessToken().getJwtToken(),
+          email: payload.email ?? "",
+          name: payload.name ?? payload.email ?? "",
+          groups: parseGroups(idToken),
+          sub: payload.sub ?? "",
+        });
+      },
+    );
   });
 }
 

@@ -19,10 +19,15 @@ const schema = z
     password: z.string().min(8, "At least 8 characters"),
     confirm: z.string(),
   })
-  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "Passwords do not match" });
+  .refine((v) => v.password === v.confirm, {
+    path: ["confirm"],
+    message: "Passwords do not match",
+  });
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password - Summit" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Reset password - Summit" }, { name: "robots", content: "noindex" }],
+  }),
   component: ResetPasswordPage,
 });
 
@@ -47,15 +52,22 @@ function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-hero-gradient p-6">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-elegant">
-        <Link to="/auth" className="mb-4 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+        <Link
+          to="/auth"
+          className="mb-4 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
         </Link>
         <div className="flex items-center gap-3">
           <Logo className="h-10 w-10 rounded-full" />
-          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Reset password</div>
+          <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+            Reset password
+          </div>
         </div>
         <h1 className="mt-3 text-2xl font-bold">Choose a new password</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Enter the code sent to your email and your new password.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Enter the code sent to your email and your new password.
+        </p>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div>
@@ -67,7 +79,12 @@ function ResetPasswordPage() {
           </div>
           <div>
             <Label className="mb-1.5 block text-sm">Reset code</Label>
-            <Input inputMode="numeric" maxLength={6} placeholder="123456" {...form.register("code")} />
+            <Input
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="123456"
+              {...form.register("code")}
+            />
             {form.formState.errors.code && (
               <p className="mt-1 text-xs text-destructive">{form.formState.errors.code.message}</p>
             )}
@@ -76,14 +93,18 @@ function ResetPasswordPage() {
             <Label className="mb-1.5 block text-sm">New password</Label>
             <Input type="password" autoComplete="new-password" {...form.register("password")} />
             {form.formState.errors.password && (
-              <p className="mt-1 text-xs text-destructive">{form.formState.errors.password.message}</p>
+              <p className="mt-1 text-xs text-destructive">
+                {form.formState.errors.password.message}
+              </p>
             )}
           </div>
           <div>
             <Label className="mb-1.5 block text-sm">Confirm password</Label>
             <Input type="password" autoComplete="new-password" {...form.register("confirm")} />
             {form.formState.errors.confirm && (
-              <p className="mt-1 text-xs text-destructive">{form.formState.errors.confirm.message}</p>
+              <p className="mt-1 text-xs text-destructive">
+                {form.formState.errors.confirm.message}
+              </p>
             )}
           </div>
           <Button

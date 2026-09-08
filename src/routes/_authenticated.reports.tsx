@@ -12,7 +12,13 @@ import { registrationsApi, type ApiRegistration } from "@/lib/api-client";
 import { useEvents } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getSession } from "@/lib/auth/cognito-client";
 
 export const Route = createFileRoute("/_authenticated/reports")({
@@ -50,9 +56,11 @@ function ReportsPage() {
   };
 
   const rows =
-    kind === "attendance" ? allRows.filter((r) => r.checkedInAt)
-    : kind === "walk_in"  ? allRows.filter((r) => r.registrationType === "walk_in")
-    : allRows;
+    kind === "attendance"
+      ? allRows.filter((r) => r.checkedInAt)
+      : kind === "walk_in"
+        ? allRows.filter((r) => r.registrationType === "walk_in")
+        : allRows;
 
   const columns = [
     { key: "registrationNumber", label: "Reg No." },
@@ -105,38 +113,58 @@ function ReportsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Reports</div>
+        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+          Reports
+        </div>
         <h1 className="mt-1 text-3xl font-bold">Export event data</h1>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         {events.length > 0 && (
           <Select value={activeEventId} onValueChange={setSelectedEventId}>
-            <SelectTrigger className="w-[220px]"><SelectValue placeholder="Select event" /></SelectTrigger>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Select event" />
+            </SelectTrigger>
             <SelectContent>
               {events.map((e) => (
-                <SelectItem key={e.eventId} value={e.eventId}>{e.name}</SelectItem>
+                <SelectItem key={e.eventId} value={e.eventId}>
+                  {e.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         )}
         {(["attendance", "registration", "walk_in"] as ReportKind[]).map((k) => (
-          <Button key={k} variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}
-            className={kind === k ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}>
+          <Button
+            key={k}
+            variant={kind === k ? "default" : "outline"}
+            onClick={() => setKind(k)}
+            className={kind === k ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}
+          >
             {labelFor(k)}
             {!query.isLoading && (
-              <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                kind === k ? "bg-white/20" : "bg-muted text-muted-foreground"
-              }`}>{counts[k]}</span>
+              <span
+                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  kind === k ? "bg-white/20" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {counts[k]}
+              </span>
             )}
           </Button>
         ))}
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={exportCSV} variant="outline" disabled={rows.length === 0}><FileText className="mr-2 h-4 w-4" /> Export CSV</Button>
-        <Button onClick={exportXLSX} variant="outline" disabled={rows.length === 0}><Download className="mr-2 h-4 w-4" /> Export Excel</Button>
-        <Button onClick={exportPDF} variant="outline" disabled={rows.length === 0}><FileType2 className="mr-2 h-4 w-4" /> Export PDF</Button>
+        <Button onClick={exportCSV} variant="outline" disabled={rows.length === 0}>
+          <FileText className="mr-2 h-4 w-4" /> Export CSV
+        </Button>
+        <Button onClick={exportXLSX} variant="outline" disabled={rows.length === 0}>
+          <Download className="mr-2 h-4 w-4" /> Export Excel
+        </Button>
+        <Button onClick={exportPDF} variant="outline" disabled={rows.length === 0}>
+          <FileType2 className="mr-2 h-4 w-4" /> Export PDF
+        </Button>
         <div className="ml-auto text-sm text-muted-foreground self-center">
           {query.isLoading ? "Loading…" : `${rows.length} record${rows.length === 1 ? "" : "s"}`}
         </div>
@@ -146,21 +174,39 @@ function ReportsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-secondary/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>{columns.map((c) => <th key={c.key} className="px-4 py-3 font-semibold">{c.label}</th>)}</tr>
+              <tr>
+                {columns.map((c) => (
+                  <th key={c.key} className="px-4 py-3 font-semibold">
+                    {c.label}
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {query.isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={columns.length} className="p-3"><Skeleton className="h-6 w-full" /></td></tr>
+                  <tr key={i}>
+                    <td colSpan={columns.length} className="p-3">
+                      <Skeleton className="h-6 w-full" />
+                    </td>
+                  </tr>
                 ))
               ) : rows.length === 0 ? (
-                <tr><td colSpan={columns.length} className="p-10 text-center text-muted-foreground">No data.</td></tr>
+                <tr>
+                  <td colSpan={columns.length} className="p-10 text-center text-muted-foreground">
+                    No data.
+                  </td>
+                </tr>
               ) : (
                 rows.slice(0, 200).map((r) => {
                   const p = pretty(r);
                   return (
                     <tr key={r.registrationId} className="border-b border-border last:border-0">
-                      {columns.map((c) => <td key={c.key} className="px-4 py-2">{(p as Record<string, string>)[c.key]}</td>)}
+                      {columns.map((c) => (
+                        <td key={c.key} className="px-4 py-2">
+                          {(p as Record<string, string>)[c.key]}
+                        </td>
+                      ))}
                     </tr>
                   );
                 })
@@ -180,6 +226,8 @@ function labelFor(k: ReportKind) {
 function download(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = name; a.click();
+  a.href = url;
+  a.download = name;
+  a.click();
   URL.revokeObjectURL(url);
 }

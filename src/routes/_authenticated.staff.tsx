@@ -16,13 +16,18 @@ export const Route = createFileRoute("/_authenticated/staff")({
 });
 
 const groupLabels: Record<string, { label: string; description: string }> = {
-  Admin: { label: "Administrator", description: "Full access - events, staff, reports, settings, audit" },
-  RegistrationOfficer: { label: "Registration Officer", description: "Walk-in registration and participant management" },
+  Admin: {
+    label: "Administrator",
+    description: "Full access - events, staff, reports, settings, audit",
+  },
+  RegistrationOfficer: {
+    label: "Registration Officer",
+    description: "Walk-in registration and participant management",
+  },
   CheckinOfficer: { label: "Check-in Officer", description: "Check-in and limited walk-in access" },
 };
 
 function StaffPage() {
-
   return (
     <div className="space-y-6">
       <div>
@@ -36,30 +41,50 @@ function StaffPage() {
           <div className="text-sm font-semibold">Managing staff via AWS Cognito</div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Staff accounts are managed directly in the <strong>AWS Cognito User Pool</strong>.
-          A staff management API is on the roadmap - for now use the AWS Console or CLI below.
+          Staff accounts are managed directly in the <strong>AWS Cognito User Pool</strong>. A staff
+          management API is on the roadmap - for now use the AWS Console or CLI below.
         </p>
         <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-2">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Add a staff member</div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Add a staff member
+          </div>
           <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground">
-            <li>AWS Console → <strong>Cognito → User Pools → event-with-me-prod</strong></li>
-            <li>Click <strong>Create user</strong> - enter email + temporary password</li>
-            <li>Go to <strong>Groups</strong> → add user to the appropriate group below</li>
+            <li>
+              AWS Console → <strong>Cognito → User Pools → event-with-me-prod</strong>
+            </li>
+            <li>
+              Click <strong>Create user</strong> - enter email + temporary password
+            </li>
+            <li>
+              Go to <strong>Groups</strong> → add user to the appropriate group below
+            </li>
           </ol>
         </div>
         <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-2">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Disable or reset a staff member</div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Disable or reset a staff member
+          </div>
           <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground">
-            <li>Select the user in Cognito → <strong>Disable user</strong> to revoke access immediately</li>
-            <li>Select the user → <strong>Reset password</strong> to send a new temporary password</li>
+            <li>
+              Select the user in Cognito → <strong>Disable user</strong> to revoke access
+              immediately
+            </li>
+            <li>
+              Select the user → <strong>Reset password</strong> to send a new temporary password
+            </li>
           </ol>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         {Object.entries(groupLabels).map(([key, { label, description }]) => (
-          <div key={key} className="rounded-2xl border border-border bg-card p-5 shadow-soft space-y-2">
-            <Badge variant="outline" className="font-mono text-xs">{key}</Badge>
+          <div
+            key={key}
+            className="rounded-2xl border border-border bg-card p-5 shadow-soft space-y-2"
+          >
+            <Badge variant="outline" className="font-mono text-xs">
+              {key}
+            </Badge>
             <div className="text-sm font-semibold">{label}</div>
             <div className="text-xs text-muted-foreground">{description}</div>
           </div>

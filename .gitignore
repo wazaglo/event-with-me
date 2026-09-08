@@ -36,3 +36,15 @@ backend/.aws-sam/
 *.njsproj
 *.sln
 *.sw?
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# Architecture diagram working files (kept locally; exports are tracked)
+docs/icons/
+docs/architecture.drawio
+
+# ZCode session state
+.zcode/

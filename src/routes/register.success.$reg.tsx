@@ -25,7 +25,11 @@ function SuccessPage() {
   const handleRegisterAnother = () => {
     // Clear all stored registrations so the user can register again
     openEvents.forEach((e) => {
-      try { localStorage.removeItem(`visitorlog.registration.${e.eventId}`); } catch { /* ignore */ }
+      try {
+        localStorage.removeItem(`visitorlog.registration.${e.eventId}`);
+      } catch {
+        /* ignore */
+      }
     });
     window.location.href = "/register";
   };
@@ -44,17 +48,24 @@ function SuccessPage() {
               <div className="rounded-full bg-accent/20 p-2">
                 <CheckCircle2 className="h-6 w-6 text-accent" />
               </div>
-              <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">Registration complete</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
+                Registration complete
+              </div>
             </div>
             <h1 className="mt-4 text-3xl font-bold md:text-4xl">You're in - enjoy your stay.</h1>
             <p className="mt-2 max-w-xl text-white/85">
-              Keep your registration number handy. Show it at the reception desk to collect your badge.
+              Keep your registration number handy. Show it at the reception desk to collect your
+              badge.
             </p>
           </div>
           <div className="grid gap-6 p-10 md:grid-cols-[1fr_auto] md:items-center">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your registration number</div>
-              <div className="mt-1 text-4xl font-black tracking-tight text-primary md:text-5xl">{reg}</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Your registration number
+              </div>
+              <div className="mt-1 text-4xl font-black tracking-tight text-primary md:text-5xl">
+                {reg}
+              </div>
               <p className="mt-3 text-sm text-muted-foreground">
                 {data?.name ?? "Financial Architecture Summit"}
                 {data?.venue ? ` · ${data.venue}` : ""}

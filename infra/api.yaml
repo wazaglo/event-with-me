@@ -1,0 +1,330 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "event-with-me edge (API Gateway) stack",
+  "Parameters": {
+    "StageName": {
+      "Type": "String",
+      "Default": "prod"
+    }
+  },
+  "Resources": {
+    "Api": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "event-with-me-api",
+        "Body": {
+          "Fn::Sub": [
+            "{\"swagger\":\"2.0\",\"info\":{\"title\":\"event-with-me-api\",\"version\":\"1.0\"},\"securityDefinitions\":{\"cognitoAuthorizer\":{\"type\":\"apiKey\",\"name\":\"Authorization\",\"in\":\"header\",\"x-amazon-apigateway-authtype\":\"cognito_user_pools\",\"x-amazon-apigateway-authorizer\":{\"type\":\"cognito_user_pools\",\"identitySource\":\"method.request.header.Authorization\",\"providerARNs\":[\"${PoolArn}\"]}}},\"paths\":{\"/events\":{\"get\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriListEvents}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}}},\"post\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriCreateEvent}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/events/{eventId}\":{\"get\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriGetEvent}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}}},\"put\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriUpdateEvent}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"delete\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriDeleteEvent}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/events/{eventId}/register\":{\"post\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriRegisterParticipant}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}}},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/events/{eventId}/registrations\":{\"get\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriListRegistrations}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/events/{eventId}/walk-in\":{\"post\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriWalkInRegistration}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/registrations/by-email/{email}\":{\"get\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriGetRegistrations}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/registrations/{id}\":{\"get\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriGetRegistration}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"put\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriUpdateRegistration}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"delete\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriDeleteRegistration}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/registrations/{id}/checkin\":{\"post\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriCheckIn}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/registrations/{id}/print\":{\"post\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriPrintBadge}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}},\"/audit\":{\"get\":{\"x-amazon-apigateway-integration\":{\"type\":\"aws_proxy\",\"httpMethod\":\"POST\",\"uri\":\"arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UriGetAuditLog}/invocations\"},\"responses\":{\"200\":{\"description\":\"OK\"}},\"security\":[{\"cognitoAuthorizer\":[]}]},\"options\":{\"consumes\":[\"application/json\"],\"produces\":[\"application/json\"],\"x-amazon-apigateway-integration\":{\"type\":\"mock\",\"requestTemplates\":{\"application/json\":\"{\\\"statusCode\\\": 200}\"},\"responses\":{\"default\":{\"statusCode\":\"200\",\"responseParameters\":{\"method.response.header.Access-Control-Allow-Headers\":\"'Content-Type,Authorization'\",\"method.response.header.Access-Control-Allow-Methods\":\"'GET,POST,PUT,DELETE,OPTIONS'\",\"method.response.header.Access-Control-Allow-Origin\":\"'*'\"}}},\"passthroughBehavior\":\"when_no_match\"},\"responses\":{\"200\":{\"description\":\"OK\",\"headers\":{\"Access-Control-Allow-Headers\":{\"type\":\"string\"},\"Access-Control-Allow-Methods\":{\"type\":\"string\"},\"Access-Control-Allow-Origin\":{\"type\":\"string\"}}}}}}}}",
+            {
+              "PoolArn": {
+                "Fn::ImportValue": "event-with-me-auth-UserPoolArn"
+              },
+              "UriCreateEvent": {
+                "Fn::ImportValue": "event-with-me-lambdas-CreateEventArn"
+              },
+              "UriListEvents": {
+                "Fn::ImportValue": "event-with-me-lambdas-ListEventsArn"
+              },
+              "UriGetEvent": {
+                "Fn::ImportValue": "event-with-me-lambdas-GetEventArn"
+              },
+              "UriUpdateEvent": {
+                "Fn::ImportValue": "event-with-me-lambdas-UpdateEventArn"
+              },
+              "UriDeleteEvent": {
+                "Fn::ImportValue": "event-with-me-lambdas-DeleteEventArn"
+              },
+              "UriRegisterParticipant": {
+                "Fn::ImportValue": "event-with-me-lambdas-RegisterParticipantArn"
+              },
+              "UriListRegistrations": {
+                "Fn::ImportValue": "event-with-me-lambdas-ListRegistrationsArn"
+              },
+              "UriGetRegistrations": {
+                "Fn::ImportValue": "event-with-me-lambdas-GetRegistrationsArn"
+              },
+              "UriGetRegistration": {
+                "Fn::ImportValue": "event-with-me-lambdas-GetRegistrationArn"
+              },
+              "UriUpdateRegistration": {
+                "Fn::ImportValue": "event-with-me-lambdas-UpdateRegistrationArn"
+              },
+              "UriDeleteRegistration": {
+                "Fn::ImportValue": "event-with-me-lambdas-DeleteRegistrationArn"
+              },
+              "UriCheckIn": {
+                "Fn::ImportValue": "event-with-me-lambdas-CheckInArn"
+              },
+              "UriWalkInRegistration": {
+                "Fn::ImportValue": "event-with-me-lambdas-WalkInRegistrationArn"
+              },
+              "UriPrintBadge": {
+                "Fn::ImportValue": "event-with-me-lambdas-PrintBadgeArn"
+              },
+              "UriGetAuditLog": {
+                "Fn::ImportValue": "event-with-me-lambdas-GetAuditLogArn"
+              }
+            }
+          ]
+        },
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL"
+          ]
+        }
+      }
+    },
+    "CreateEventApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-CreateEventArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "ListEventsApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-ListEventsArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "GetEventApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-GetEventArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "UpdateEventApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-UpdateEventArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "DeleteEventApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-DeleteEventArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "RegisterParticipantApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-RegisterParticipantArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "ListRegistrationsApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-ListRegistrationsArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "GetRegistrationsApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-GetRegistrationsArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "GetRegistrationApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-GetRegistrationArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "UpdateRegistrationApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-UpdateRegistrationArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "DeleteRegistrationApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-DeleteRegistrationArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "CheckInApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-CheckInArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "WalkInRegistrationApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-WalkInRegistrationArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "PrintBadgeApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-PrintBadgeArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "GetAuditLogApiPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "event-with-me-lambdas-GetAuditLogArn"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+        }
+      }
+    },
+    "ApiDeployment": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "DependsOn": [
+        "CreateEventApiPermission",
+        "ListEventsApiPermission",
+        "GetEventApiPermission",
+        "UpdateEventApiPermission",
+        "DeleteEventApiPermission",
+        "RegisterParticipantApiPermission",
+        "ListRegistrationsApiPermission",
+        "GetRegistrationsApiPermission",
+        "GetRegistrationApiPermission",
+        "UpdateRegistrationApiPermission",
+        "DeleteRegistrationApiPermission",
+        "CheckInApiPermission",
+        "WalkInRegistrationApiPermission",
+        "PrintBadgeApiPermission",
+        "GetAuditLogApiPermission"
+      ],
+      "Properties": {
+        "RestApiId": {
+          "Ref": "Api"
+        }
+      }
+    },
+    "ApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "RestApiId": {
+          "Ref": "Api"
+        },
+        "DeploymentId": {
+          "Ref": "ApiDeployment"
+        },
+        "StageName": {
+          "Ref": "StageName"
+        },
+        "MethodSettings": [
+          {
+            "ResourcePath": "/*",
+            "HttpMethod": "*",
+            "ThrottlingBurstLimit": 50,
+            "ThrottlingRateLimit": 25
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "ApiBaseUrl": {
+      "Value": {
+        "Fn::Sub": "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${StageName}"
+      },
+      "Export": {
+        "Name": "event-with-me-api-BaseUrl"
+      }
+    }
+  }
+}

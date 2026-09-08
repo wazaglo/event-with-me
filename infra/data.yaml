@@ -1,0 +1,157 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "event-with-me data layer (DynamoDB + SNS) stack",
+  "Resources": {
+    "EventsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": {
+          "Fn::Sub": "event-with-me-events"
+        },
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "eventId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "eventId",
+            "KeyType": "HASH"
+          }
+        ]
+      }
+    },
+    "RegistrationsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": {
+          "Fn::Sub": "event-with-me-registrations"
+        },
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "registrationId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "email",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "eventId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "createdAt",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "registrationId",
+            "KeyType": "HASH"
+          }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "email-eventId-index",
+            "KeySchema": [
+              {
+                "AttributeName": "email",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "eventId",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          },
+          {
+            "IndexName": "eventId-createdAt-index",
+            "KeySchema": [
+              {
+                "AttributeName": "eventId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "createdAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ]
+      }
+    },
+    "AuditTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": {
+          "Fn::Sub": "event-with-me-audit-logs"
+        },
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "auditId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "auditId",
+            "KeyType": "HASH"
+          }
+        ]
+      }
+    },
+    "ConfirmationTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": {
+          "Fn::Sub": "event-with-me-confirmations"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "EventsTable": {
+      "Value": {
+        "Ref": "EventsTable"
+      },
+      "Export": {
+        "Name": "event-with-me-data-EventsTable"
+      }
+    },
+    "RegistrationsTable": {
+      "Value": {
+        "Ref": "RegistrationsTable"
+      },
+      "Export": {
+        "Name": "event-with-me-data-RegistrationsTable"
+      }
+    },
+    "AuditTable": {
+      "Value": {
+        "Ref": "AuditTable"
+      },
+      "Export": {
+        "Name": "event-with-me-data-AuditTable"
+      }
+    },
+    "ConfirmationTopicArn": {
+      "Value": {
+        "Ref": "ConfirmationTopic"
+      },
+      "Export": {
+        "Name": "event-with-me-data-ConfirmationTopicArn"
+      }
+    }
+  }
+}

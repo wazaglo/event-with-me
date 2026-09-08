@@ -1,0 +1,999 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "event-with-me compute (Lambda functions) stack",
+  "Parameters": {
+    "CodeBucket": {
+      "Type": "String",
+      "Description": "S3 bucket holding lambda zips (uploaded by scripts/deploy-stack.sh)"
+    },
+    "CodePrefix": {
+      "Type": "String",
+      "Default": "event-with-me/",
+      "Description": "S3 key prefix for lambda zips"
+    },
+    "AllowedOrigin": {
+      "Type": "String",
+      "Default": "*",
+      "Description": "CORS origin injected into Lambda responses"
+    }
+  },
+  "Resources": {
+    "LambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Sub": "event-with-me-lambda-role"
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "dynamodb-access",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/event-with-me-events"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/event-with-me-registrations"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/event-with-me-registrations/index/*"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/event-with-me-audit-logs"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "sns-publish",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "sns:Publish",
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:event-with-me-confirmations"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CreateEventFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-CreateEvent",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "createEvent.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}createEvent-1d7d5dd327ef.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "ListEventsFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-ListEvents",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "listEvents.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}listEvents-72f5aca4aa7d.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "GetEventFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-GetEvent",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "getEvent.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}getEvent-f3e4d0e94320.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "UpdateEventFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-UpdateEvent",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "updateEvent.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}updateEvent-f6dd31f8c799.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "DeleteEventFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-DeleteEvent",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "deleteEvent.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}deleteEvent-a62c7134f1af.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "RegisterParticipantFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-RegisterParticipant",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "registerParticipant.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}registerParticipant-fd296cfbc6ee.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "ListRegistrationsFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-ListRegistrations",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "listRegistrations.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}listRegistrations-ad6bb31144c1.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "GetRegistrationsFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-GetRegistrations",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "getRegistrations.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}getRegistrations-fcdb0de6c92b.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "GetRegistrationFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-GetRegistration",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "getRegistration.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}getRegistration-001563fb86c0.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "UpdateRegistrationFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-UpdateRegistration",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "updateRegistration.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}updateRegistration-69d1e591007e.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "DeleteRegistrationFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-DeleteRegistration",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "deleteRegistration.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}deleteRegistration-73a7bb14600e.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "CheckInFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-CheckIn",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "checkIn.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}checkIn-361f25431762.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "WalkInRegistrationFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-WalkInRegistration",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "walkInRegistration.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}walkInRegistration-58c2c2a74880.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "PrintBadgeFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-PrintBadge",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "printBadge.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}printBadge-6b7f30500494.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    },
+    "GetAuditLogFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+        "LambdaRole"
+      ],
+      "Properties": {
+        "FunctionName": "event-with-me-GetAuditLog",
+        "Runtime": "python3.13",
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "getAuditLog.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 15,
+        "MemorySize": 256,
+        "Code": {
+          "S3Bucket": {
+            "Ref": "CodeBucket"
+          },
+          "S3Key": {
+            "Fn::Sub": "${CodePrefix}getAuditLog-8e0b9590e26e.zip"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-EventsTable"
+            },
+            "REGISTRATIONS_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-RegistrationsTable"
+            },
+            "AUDIT_TABLE": {
+              "Fn::ImportValue": "event-with-me-data-AuditTable"
+            },
+            "ALLOWED_ORIGIN": {
+              "Ref": "AllowedOrigin"
+            },
+            "SNS_TOPIC_ARN": {
+              "Fn::ImportValue": "event-with-me-data-ConfirmationTopicArn"
+            }
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "CreateEventArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CreateEventFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-CreateEventArn"
+      }
+    },
+    "ListEventsArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ListEventsFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-ListEventsArn"
+      }
+    },
+    "GetEventArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GetEventFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-GetEventArn"
+      }
+    },
+    "UpdateEventArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "UpdateEventFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-UpdateEventArn"
+      }
+    },
+    "DeleteEventArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "DeleteEventFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-DeleteEventArn"
+      }
+    },
+    "RegisterParticipantArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RegisterParticipantFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-RegisterParticipantArn"
+      }
+    },
+    "ListRegistrationsArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ListRegistrationsFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-ListRegistrationsArn"
+      }
+    },
+    "GetRegistrationsArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GetRegistrationsFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-GetRegistrationsArn"
+      }
+    },
+    "GetRegistrationArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GetRegistrationFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-GetRegistrationArn"
+      }
+    },
+    "UpdateRegistrationArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "UpdateRegistrationFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-UpdateRegistrationArn"
+      }
+    },
+    "DeleteRegistrationArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "DeleteRegistrationFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-DeleteRegistrationArn"
+      }
+    },
+    "CheckInArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CheckInFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-CheckInArn"
+      }
+    },
+    "WalkInRegistrationArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WalkInRegistrationFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-WalkInRegistrationArn"
+      }
+    },
+    "PrintBadgeArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "PrintBadgeFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-PrintBadgeArn"
+      }
+    },
+    "GetAuditLogArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "GetAuditLogFunction",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": "event-with-me-lambdas-GetAuditLogArn"
+      }
+    }
+  }
+}

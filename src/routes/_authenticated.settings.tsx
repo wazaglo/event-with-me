@@ -14,7 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getSession } from "@/lib/auth/cognito-client";
 
 const settingsSchema = z.object({
@@ -26,7 +32,9 @@ const settingsSchema = z.object({
     .trim()
     .max(500)
     .optional()
-    .refine((v) => !v || v.startsWith("https://"), { message: "Logo URL must start with https://" }),
+    .refine((v) => !v || v.startsWith("https://"), {
+      message: "Logo URL must start with https://",
+    }),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex colour"),
   accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex colour"),
   registrationOpen: z.boolean(),
@@ -114,22 +122,31 @@ function SettingsPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Settings</div>
+        <div className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+          Settings
+        </div>
         <h1 className="mt-1 text-3xl font-bold">Event configuration</h1>
       </div>
 
       {events.length > 1 && (
         <Select value={activeEventId} onValueChange={setSelectedEventId}>
-          <SelectTrigger className="w-[240px]"><SelectValue placeholder="Select event" /></SelectTrigger>
+          <SelectTrigger className="w-[240px]">
+            <SelectValue placeholder="Select event" />
+          </SelectTrigger>
           <SelectContent>
             {events.map((e) => (
-              <SelectItem key={e.eventId} value={e.eventId}>{e.name}</SelectItem>
+              <SelectItem key={e.eventId} value={e.eventId}>
+                {e.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       )}
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-soft"
+      >
         <Section title="Event">
           <Row>
             <Field label="Event name" error={form.formState.errors.name?.message}>
@@ -175,12 +192,24 @@ function SettingsPage() {
               <Input type="number" min={12} max={28} {...form.register("badgeFontSize")} />
             </Field>
           </Row>
-          <Toggle label="Show QR code" checked={form.watch("showQr")} onCheckedChange={(v) => form.setValue("showQr", v)} />
-          <Toggle label="Show registration number" checked={form.watch("showRegistrationNumber")} onCheckedChange={(v) => form.setValue("showRegistrationNumber", v)} />
+          <Toggle
+            label="Show QR code"
+            checked={form.watch("showQr")}
+            onCheckedChange={(v) => form.setValue("showQr", v)}
+          />
+          <Toggle
+            label="Show registration number"
+            checked={form.watch("showRegistrationNumber")}
+            onCheckedChange={(v) => form.setValue("showRegistrationNumber", v)}
+          />
         </Section>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save settings
           </Button>
@@ -191,12 +220,25 @@ function SettingsPage() {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div><div className="mb-3 text-sm font-semibold">{title}</div><div className="space-y-3">{children}</div></div>;
+  return (
+    <div>
+      <div className="mb-3 text-sm font-semibold">{title}</div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
 }
 function Row({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{children}</div>;
 }
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <Label className="mb-1.5 block text-sm">{label}</Label>
@@ -205,7 +247,17 @@ function Field({ label, error, children }: { label: string; error?: string; chil
     </div>
   );
 }
-function Toggle({ label, description, checked, onCheckedChange }: { label: string; description?: string; checked: boolean; onCheckedChange: (v: boolean) => void }) {
+function Toggle({
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-border p-3">
       <div>

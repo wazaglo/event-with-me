@@ -29,7 +29,15 @@ function BadgePage() {
 
   // Pull participant from cache first, fall back to API fetch
   const cached = useQueryClient()
-    .getQueriesData<{ registrationId: string; fullName: string; organisation: string; registrationNumber: string; registrationType: string }[]>({ queryKey: ["participants"] })
+    .getQueriesData<
+      {
+        registrationId: string;
+        fullName: string;
+        organisation: string;
+        registrationNumber: string;
+        registrationType: string;
+      }[]
+    >({ queryKey: ["participants"] })
     .flatMap(([, data]) => data ?? [])
     .find((r) => r && r.registrationId === id);
 
@@ -43,7 +51,13 @@ function BadgePage() {
   const participant = cached ?? fetched.data;
   const isLoading = !cached && fetched.isLoading;
 
-  const activeEvent = events.find((e) => participant && "eventId" in participant && (participant as { eventId?: string }).eventId === e.eventId) ?? events[0];
+  const activeEvent =
+    events.find(
+      (e) =>
+        participant &&
+        "eventId" in participant &&
+        (participant as { eventId?: string }).eventId === e.eventId,
+    ) ?? events[0];
 
   const doPrint = useReactToPrint({
     contentRef: badgeRef,
@@ -81,9 +95,13 @@ function BadgePage() {
   if (!participant || !activeEvent) {
     return (
       <div className="max-w-xl space-y-4">
-        <p className="text-muted-foreground">Participant not found. Open from the participants list.</p>
+        <p className="text-muted-foreground">
+          Participant not found. Open from the participants list.
+        </p>
         <Link to="/participants">
-          <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" /> Back to participants</Button>
+          <Button variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to participants
+          </Button>
         </Link>
       </div>
     );
@@ -102,23 +120,35 @@ function BadgePage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
-        <Link to="/participants" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/participants"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
-        <Button onClick={() => doPrint()} className="bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button
+          onClick={() => doPrint()}
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
+        >
           <Printer className="mr-2 h-4 w-4" /> Print badge
         </Button>
       </div>
 
       <div className="no-print rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Badge preview · 100mm × 60mm</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Badge preview · 100mm × 60mm
+        </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Tip: disable "Headers and footers" and set margins to "None" for a clean edge-to-edge badge.
+          Tip: disable "Headers and footers" and set margins to "None" for a clean edge-to-edge
+          badge.
         </p>
       </div>
 
       <div className="mx-auto flex justify-center">
-        <div ref={badgeRef} className="print-area rounded-lg border border-border bg-white p-4 shadow-elegant">
+        <div
+          ref={badgeRef}
+          className="print-area rounded-lg border border-border bg-white p-4 shadow-elegant"
+        >
           <ParticipantBadge
             participant={{
               id: participant.registrationId,

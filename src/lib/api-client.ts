@@ -66,7 +66,7 @@ export interface CreateEventBody {
   badgeFontSize?: number;
 }
 
-export interface UpdateEventBody extends Partial<CreateEventBody> {}
+export type UpdateEventBody = Partial<CreateEventBody>;
 
 export const eventsApi = {
   list: () => request<ApiEvent[]>("GET", "/events"),
@@ -96,8 +96,21 @@ export interface ApiRegistration {
 }
 
 export const registrationsApi = {
-  register: (eventId: string, body: { fullName: string; organisation: string; email: string; phone?: string; position?: string }) =>
-    request<{ registrationNumber: string; registrationId: string }>("POST", `/events/${eventId}/register`, body),
+  register: (
+    eventId: string,
+    body: {
+      fullName: string;
+      organisation: string;
+      email: string;
+      phone?: string;
+      position?: string;
+    },
+  ) =>
+    request<{ registrationNumber: string; registrationId: string }>(
+      "POST",
+      `/events/${eventId}/register`,
+      body,
+    ),
 
   list: (eventId: string, params?: { search?: string; type?: string; status?: string }) => {
     const qs = new URLSearchParams();
@@ -108,8 +121,7 @@ export const registrationsApi = {
     return request<ApiRegistration[]>("GET", `/events/${eventId}/registrations${q ? `?${q}` : ""}`);
   },
 
-  getById: (id: string) =>
-    request<ApiRegistration>("GET", `/registrations/${id}`),
+  getById: (id: string) => request<ApiRegistration>("GET", `/registrations/${id}`),
 
   getByEmail: (email: string) =>
     request<ApiRegistration[]>("GET", `/registrations/by-email/${encodeURIComponent(email)}`),
@@ -121,11 +133,22 @@ export const registrationsApi = {
 
   checkIn: (id: string) => request<ApiRegistration>("POST", `/registrations/${id}/checkin`),
 
-  walkIn: (eventId: string, body: { fullName: string; organisation: string; email: string; phone?: string; position?: string }) =>
-    request<ApiRegistration>("POST", `/events/${eventId}/walk-in`, body),
+  walkIn: (
+    eventId: string,
+    body: {
+      fullName: string;
+      organisation: string;
+      email: string;
+      phone?: string;
+      position?: string;
+    },
+  ) => request<ApiRegistration>("POST", `/events/${eventId}/walk-in`, body),
 
   printBadge: (id: string) =>
-    request<{ badgePrintedAt: string; badgePrintCount: number }>("POST", `/registrations/${id}/print`),
+    request<{ badgePrintedAt: string; badgePrintCount: number }>(
+      "POST",
+      `/registrations/${id}/print`,
+    ),
 };
 
 // ── Audit ─────────────────────────────────────────────────────────────────────
@@ -137,7 +160,7 @@ export interface ApiAuditLog {
   entityId: string | null;
   actorId: string | null;
   actorLabel: string | null;
-  meta: Record<string, unknown>;
+  meta: { name?: string; email?: string; phone?: string; reg?: string } & Record<string, unknown>;
   createdAt: string;
 }
 

@@ -2,8 +2,17 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard, Users, UserPlus, QrCode, FileBarChart,
-  Settings as SettingsIcon, ShieldCheck, LogOut, ScrollText, Menu, CalendarDays,
+  LayoutDashboard,
+  Users,
+  UserPlus,
+  QrCode,
+  FileBarChart,
+  Settings as SettingsIcon,
+  ShieldCheck,
+  LogOut,
+  ScrollText,
+  Menu,
+  CalendarDays,
 } from "lucide-react";
 import { Logo, useEventSettings } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -86,7 +95,9 @@ export function AppShell() {
       <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
         <Logo className="h-10 w-10 rounded-full bg-white/90 p-0.5" />
         <div className="leading-tight min-w-0">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-primary">Event Console</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-primary">
+            Event Console
+          </div>
           <div className="truncate text-sm font-semibold">{settings?.name ?? "Summit Console"}</div>
         </div>
       </div>
@@ -128,7 +139,10 @@ export function AppShell() {
                 <div className="text-xs text-muted-foreground">
                   {settings?.date
                     ? new Date(settings.date).toLocaleDateString(undefined, {
-                        weekday: "long", year: "numeric", month: "long", day: "numeric",
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })
                     : "Live console"}
                 </div>

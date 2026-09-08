@@ -33,7 +33,18 @@ function ParticipantDetail() {
 
   // Pull from React Query cache populated by participants list
   const cached = useQueryClient()
-    .getQueriesData<{ registrationId: string; fullName: string; organisation: string; email: string; phone: string | null; position: string | null; checkedInAt: string | null; registrationNumber: string }[]>({ queryKey: ["participants"] })
+    .getQueriesData<
+      {
+        registrationId: string;
+        fullName: string;
+        organisation: string;
+        email: string;
+        phone: string | null;
+        position: string | null;
+        checkedInAt: string | null;
+        registrationNumber: string;
+      }[]
+    >({ queryKey: ["participants"] })
     .flatMap(([, data]) => data ?? [])
     .find((r) => r && r.registrationId === id);
 
@@ -66,7 +77,9 @@ function ParticipantDetail() {
   // Warn before navigating away with unsaved changes
   useEffect(() => {
     if (!form.formState.isDirty) return;
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [form.formState.isDirty]);
@@ -113,8 +126,14 @@ function ParticipantDetail() {
   if (!participant) {
     return (
       <div className="max-w-xl">
-        <p className="text-muted-foreground">Participant not found. Go back and open from the participants list.</p>
-        <Button onClick={() => navigate({ to: "/participants" })} variant="outline" className="mt-4">
+        <p className="text-muted-foreground">
+          Participant not found. Go back and open from the participants list.
+        </p>
+        <Button
+          onClick={() => navigate({ to: "/participants" })}
+          variant="outline"
+          className="mt-4"
+        >
           Back to participants
         </Button>
       </div>
@@ -123,7 +142,10 @@ function ParticipantDetail() {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <Link to="/participants" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/participants"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to participants
       </Link>
 
@@ -142,18 +164,26 @@ function ParticipantDetail() {
                 <CheckCircle2 className="h-3.5 w-3.5" /> Checked in
               </span>
             ) : (
-              <Button onClick={checkIn} className="bg-success text-success-foreground hover:bg-success/90">
+              <Button
+                onClick={checkIn}
+                className="bg-success text-success-foreground hover:bg-success/90"
+              >
                 <CheckCircle2 className="mr-2 h-4 w-4" /> Check in
               </Button>
             )}
             <Link to="/badge/$id" params={{ id }}>
-              <Button variant="outline"><Printer className="mr-2 h-4 w-4" /> Print badge</Button>
+              <Button variant="outline">
+                <Printer className="mr-2 h-4 w-4" /> Print badge
+              </Button>
             </Link>
           </div>
         </div>
       </div>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="rounded-2xl border border-border bg-card p-6 shadow-soft"
+      >
         <h2 className="text-lg font-semibold">Edit details</h2>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
@@ -178,7 +208,11 @@ function ParticipantDetail() {
           </div>
         </div>
         <div className="mt-6 flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save changes
           </Button>
