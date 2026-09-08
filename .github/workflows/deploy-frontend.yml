@@ -55,6 +55,15 @@ jobs:
           # Manual ZIP deploy: Amplify serves the ZIP ROOT as the web root, so
           # the bundle contains dist/'s contents at top level (index.html,
           # assets/, ...), not a dist/ subdirectory.
+          # A previous job stuck in PENDING/UPLOADING blocks new deployments
+          # (BadRequestException), so cancel whatever is active first.
+          active="$(aws amplify get-branch --app-id d2378xfhyngm6g \
+            --branch-name main --query branch.activeJob.jobId --output text)"
+          if [ "$active" != "None" ] && [ -n "$active" ]; then
+            echo "stopping stale job $active"
+            aws amplify stop-job --app-id d2378xfhyngm6g --branch-name main --job-id "$active"
+            sleep 5
+          fi
           (cd dist && zip -qr "$GITHUB_WORKSPACE/amplify-deploy.zip" .)
           resp="$(aws amplify create-deployment \
             --app-id d2378xfhyngm6g \
