@@ -197,7 +197,11 @@ const data = {
               Action: "sqs:SendMessage",
               Resource: getAtt("ConfirmationDLQ", "Arn"),
               Condition: {
-                ArnEquals: { "aws:SourceArn": sub(`arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:${BASE}-confirmations`) },
+                ArnEquals: {
+                  "aws:SourceArn": sub(
+                    `arn:aws:sns:\${AWS::Region}:\${AWS::AccountId}:${BASE}-confirmations`,
+                  ),
+                },
               },
             },
           ],

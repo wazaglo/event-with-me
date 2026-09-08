@@ -123,7 +123,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}createEvent.zip"
+            "Fn::Sub": "${CodePrefix}createEvent-be3a78bb1ad8.zip"
           }
         },
         "Environment": {
@@ -172,7 +172,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listEvents.zip"
+            "Fn::Sub": "${CodePrefix}listEvents-8a9c9221c99c.zip"
           }
         },
         "Environment": {
@@ -221,7 +221,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getEvent.zip"
+            "Fn::Sub": "${CodePrefix}getEvent-45f612f6f5a7.zip"
           }
         },
         "Environment": {
@@ -270,7 +270,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateEvent.zip"
+            "Fn::Sub": "${CodePrefix}updateEvent-709093521632.zip"
           }
         },
         "Environment": {
@@ -319,7 +319,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}deleteEvent.zip"
+            "Fn::Sub": "${CodePrefix}deleteEvent-e2165eb0d97b.zip"
           }
         },
         "Environment": {
@@ -368,7 +368,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}registerParticipant.zip"
+            "Fn::Sub": "${CodePrefix}registerParticipant-018fde6a2f4e.zip"
           }
         },
         "Environment": {
@@ -417,7 +417,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listRegistrations.zip"
+            "Fn::Sub": "${CodePrefix}listRegistrations-b5dbead7fecf.zip"
           }
         },
         "Environment": {
@@ -466,7 +466,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistrations.zip"
+            "Fn::Sub": "${CodePrefix}getRegistrations-29a721c620fc.zip"
           }
         },
         "Environment": {
@@ -515,7 +515,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistration.zip"
+            "Fn::Sub": "${CodePrefix}getRegistration-3c43536028d3.zip"
           }
         },
         "Environment": {
@@ -564,7 +564,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateRegistration.zip"
+            "Fn::Sub": "${CodePrefix}updateRegistration-7db57a7cc122.zip"
           }
         },
         "Environment": {
@@ -613,7 +613,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}deleteRegistration.zip"
+            "Fn::Sub": "${CodePrefix}deleteRegistration-e9eb61bd48fa.zip"
           }
         },
         "Environment": {
@@ -662,7 +662,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}checkIn.zip"
+            "Fn::Sub": "${CodePrefix}checkIn-8a69dc665acb.zip"
           }
         },
         "Environment": {
@@ -711,7 +711,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}walkInRegistration.zip"
+            "Fn::Sub": "${CodePrefix}walkInRegistration-c07dd4caea3c.zip"
           }
         },
         "Environment": {
@@ -760,7 +760,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}printBadge.zip"
+            "Fn::Sub": "${CodePrefix}printBadge-e5f0c8bf7b4e.zip"
           }
         },
         "Environment": {
@@ -809,7 +809,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getAuditLog.zip"
+            "Fn::Sub": "${CodePrefix}getAuditLog-4ca407ec14fb.zip"
           }
         },
         "Environment": {
@@ -934,7 +934,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}sendConfirmationEmail.zip"
+            "Fn::Sub": "${CodePrefix}sendConfirmationEmail-6387446a9a4a.zip"
           }
         },
         "Environment": {
