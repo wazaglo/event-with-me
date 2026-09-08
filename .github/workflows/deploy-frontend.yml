@@ -50,6 +50,14 @@ jobs:
           VITE_COGNITO_CLIENT_ID: 6kdvj9dg78eani8c88qurco01b
           VITE_AWS_REGION: us-east-1
 
+      - name: Ensure SPA rewrites on the Amplify app
+        run: |
+          # ZIP deployments bypass amplify.yml, so the SPA fallback lives on
+          # the app itself (idempotent; also covers first-time setup).
+          aws amplify update-app --app-id d2378xfhyngm6g \
+            --custom-rules '[{"source":"/<*>","target":"/index.html","status":"200"}]' \
+            --query app.customRules --output text
+
       - name: Upload dist to Amplify
         run: |
           # Manual ZIP deploy: Amplify serves the ZIP ROOT as the web root, so
@@ -76,8 +84,9 @@ jobs:
             sleep 5
           done
           [ -n "$created" ] || { echo "create-deployment kept failing: $resp" >&2; exit 1; }
-          upload_url="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["zipUploadUrl"])')"
-          job_id="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["jobId"])')"
+          # Response keys are top-level: {"jobId": ..., "zipUploadUrl": ...}
+          upload_url="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["zipUploadUrl"])')"
+          job_id="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["jobId"])')"
           curl -sf -X PUT -T amplify-deploy.zip "$upload_url"
           # The upload does not always auto-start the job; start it explicitly
           # and wait until Amplify reports the deployment outcome.
