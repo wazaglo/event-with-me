@@ -13,7 +13,7 @@ A serverless AWS event registration and ticketing system that replaces a manual 
 | Frontend            | Working, run via local `bun run dev`; Amplify Hosting not connected yet         |
 | Confirmation emails | **Not wired**: SNS topic exists with no subscriber (see "Email pipeline" below) |
 | Staff management    | Console page is a stub; in-app staff management is a planned workstream         |
-| CI (GitHub Actions) | Backend workflow defined; repo still needs AWS credentials secrets              |
+| CI (GitHub Actions) | Live: deploys use OIDC federation (no IAM users, no static keys)                |
 
 ---
 
@@ -120,9 +120,9 @@ After the first deploy, read the values you need from stack outputs (`aws cloudf
 
 ### CI: GitHub Actions
 
-`.github/workflows/deploy-lambda-code.yml` triggers on pushes to `main`/`dvlp` touching `backend/**/*.py` (plus manual dispatch): a `test` job (Python 3.13, pip, pytest) gates a `deploy` matrix that zips each function and runs `lambda update-function-code`.
+`.github/workflows/deploy-lambda-code.yml` triggers on pushes to `main`/`dvlp` touching `backend/**/*.py` (plus manual dispatch): a `test` job (Python 3.13, pip, pytest) gates a `deploy` job that zips each function and runs `lambda update-function-code`, then redeploys the API `prod` stage. `.github/workflows/deploy-frontend.yml` lints, typechecks, builds, and pushes the bundle to Amplify.
 
-It is **not functional yet**: the repo has no `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` secrets, so the deploy jobs fail at credential load. The local `scripts/deploy-stack.sh` path is what has been used so far.
+AWS auth is **OIDC federation, not IAM users**: each workflow requests `permissions: id-token: write`, and the deploy step uses `aws-actions/configure-aws-credentials@v4` with `role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}`. There are no `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets in the repo. The role's trust policy federates the GitHub OIDC provider (`token.actions.githubusercontent.com`) scoped to this repo, and deploys are additionally gated on the `production` GitHub environment.
 
 ### First-time setup checklist
 
@@ -144,7 +144,7 @@ It is **not functional yet**: the repo has no `AWS_ACCESS_KEY_ID` / `AWS_SECRET_
 
 4. **Local frontend:** `.env` with the four `VITE_` values, `bun run dev`, sign in at `/auth`.
 5. **Connect Amplify Hosting (optional):** Amplify console → host `main` branch; `amplify.yml` is detected automatically; add the four `VITE_` vars in Amplify environment settings. Then set `AllowedOrigin` to the Amplify domain via `scripts/update-cors-origin.sh`.
-6. **GitHub Actions secrets (optional, before using CI):** create a scoped IAM user (Lambda, API Gateway, DynamoDB, Cognito, SNS, S3 artifact bucket, `iam:PassRole` for the Lambda role), add `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` as repo secrets.
+6. **GitHub Actions OIDC (optional, before using CI):** create a scoped IAM role (Lambda, API Gateway, DynamoDB, Cognito, SNS, S3 artifact bucket, `iam:PassRole` for the Lambda role) whose trust policy federates the GitHub OIDC provider for this repo, set its ARN as the `AWS_DEPLOY_ROLE_ARN` repo variable, and attach the `production` environment. No IAM user or static keys are used.
 7. **Email pipeline (optional):** verify a sender identity in SES, build the SNS-triggered confirmation Lambda from `ticketProcessing.py`, subscribe it to `event-with-me-confirmations`.
 
 ---
@@ -211,7 +211,8 @@ docs/
   architecture.png   diagram export (editable .drawio kept untracked locally)
 
 .github/workflows/
-  deploy-lambda-code.yml  CI: pytest → zip → update-function-code (needs secrets)
+  deploy-lambda-code.yml  CI: pytest → zip → update-function-code (OIDC deploy)
+  deploy-frontend.yml     CI: lint/typecheck/build → Amplify (OIDC deploy)
 
 amplify.yml               ready for Amplify Hosting (not connected yet)
 .env.example              the four VITE_ values to copy into .env
