@@ -55,36 +55,44 @@ jobs:
           # Manual ZIP deploy: Amplify serves the ZIP ROOT as the web root, so
           # the bundle contains dist/'s contents at top level (index.html,
           # assets/, ...), not a dist/ subdirectory.
-          # A previous job stuck in PENDING/UPLOADING blocks new deployments
-          # (BadRequestException), so cancel whatever is active first.
-          active="$(aws amplify get-branch --app-id d2378xfhyngm6g \
-            --branch-name main --query branch.activeJob.jobId --output text)"
-          if [ "$active" != "None" ] && [ -n "$active" ]; then
-            echo "stopping stale job $active"
-            aws amplify stop-job --app-id d2378xfhyngm6g --branch-name main --job-id "$active"
-            sleep 5
-          fi
+          # A previous job stuck in PENDING blocks create-deployment
+          # (BadRequestException "last job N was not finished"); get-branch's
+          # activeJob does not reliably surface such jobs, so parse the job id
+          # out of the error and stop it before retrying.
+          set -euo pipefail
           (cd dist && zip -qr "$GITHUB_WORKSPACE/amplify-deploy.zip" .)
-          resp="$(aws amplify create-deployment \
-            --app-id d2378xfhyngm6g \
-            --branch-name main)"
+          resp=""
+          created=""
+          for attempt in 1 2 3; do
+            if resp="$(aws amplify create-deployment \
+                --app-id d2378xfhyngm6g --branch-name main 2>&1)"; then
+              created=yes
+              break
+            fi
+            stuck="$(echo "$resp" | grep -oE 'last job\(deployment\) [0-9]+' | grep -oE '[0-9]+')"
+            if [ -z "$stuck" ]; then echo "$resp" >&2; exit 1; fi
+            echo "stopping stuck Amplify job $stuck (attempt $attempt)"
+            aws amplify stop-job --app-id d2378xfhyngm6g --branch-name main --job-id "$stuck" >/dev/null || true
+            sleep 5
+          done
+          [ -n "$created" ] || { echo "create-deployment kept failing: $resp" >&2; exit 1; }
           upload_url="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["zipUploadUrl"])')"
           job_id="$(echo "$resp" | python3 -c 'import sys,json;print(json.load(sys.stdin)["deployment"]["jobId"])')"
           curl -sf -X PUT -T amplify-deploy.zip "$upload_url"
           # The upload does not always auto-start the job; start it explicitly
           # and wait until Amplify reports the deployment outcome.
+          # Status lives at job.summary.status (job.status is null).
           aws amplify start-deployment --app-id d2378xfhyngm6g \
             --branch-name main --job-id "$job_id" >/dev/null
-          status="$(aws amplify get-job --app-id d2378xfhyngm6g \
-            --branch-name main --job-id "$job_id" \
-            --query job.status --output text)"
+          status=""
           for _ in $(seq 1 30); do
-            [ "$status" != "PENDING" ] && [ "$status" != "PROVISIONING" ] \
-              && [ "$status" != "UPLOADING" ] && break
-            sleep 5
             status="$(aws amplify get-job --app-id d2378xfhyngm6g \
               --branch-name main --job-id "$job_id" \
-              --query job.status --output text)"
+              --query job.summary.status --output text)"
+            case "$status" in
+              PENDING|PROVISIONING|UPLOADING|"") sleep 5 ;;
+              *) break ;;
+            esac
           done
           echo "Amplify job $job_id: $status"
           [ "$status" = "SUCCEED" ]
