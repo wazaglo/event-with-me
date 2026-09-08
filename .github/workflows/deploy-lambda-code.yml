@@ -1,6 +1,7 @@
 name: Deploy Lambda Code
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, dvlp]
     paths:
