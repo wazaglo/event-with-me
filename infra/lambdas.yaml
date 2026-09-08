@@ -172,7 +172,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listEvents-8a9c9221c99c.zip"
+            "Fn::Sub": "${CodePrefix}listEvents-ae2426f1383c.zip"
           }
         },
         "Environment": {
@@ -270,7 +270,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateEvent-709093521632.zip"
+            "Fn::Sub": "${CodePrefix}updateEvent-639891f7e8ed.zip"
           }
         },
         "Environment": {
@@ -368,7 +368,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}registerParticipant-018fde6a2f4e.zip"
+            "Fn::Sub": "${CodePrefix}registerParticipant-28810b27ffc8.zip"
           }
         },
         "Environment": {
@@ -417,7 +417,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}listRegistrations-b5dbead7fecf.zip"
+            "Fn::Sub": "${CodePrefix}listRegistrations-998b70a1252e.zip"
           }
         },
         "Environment": {
@@ -466,7 +466,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistrations-29a721c620fc.zip"
+            "Fn::Sub": "${CodePrefix}getRegistrations-7e8f7cfa40c9.zip"
           }
         },
         "Environment": {
@@ -515,7 +515,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getRegistration-3c43536028d3.zip"
+            "Fn::Sub": "${CodePrefix}getRegistration-790927041744.zip"
           }
         },
         "Environment": {
@@ -564,7 +564,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}updateRegistration-7db57a7cc122.zip"
+            "Fn::Sub": "${CodePrefix}updateRegistration-48d2c6312de2.zip"
           }
         },
         "Environment": {
@@ -613,7 +613,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}deleteRegistration-e9eb61bd48fa.zip"
+            "Fn::Sub": "${CodePrefix}deleteRegistration-d8659ec0074f.zip"
           }
         },
         "Environment": {
@@ -662,7 +662,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}checkIn-8a69dc665acb.zip"
+            "Fn::Sub": "${CodePrefix}checkIn-40356f7e4c83.zip"
           }
         },
         "Environment": {
@@ -711,7 +711,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}walkInRegistration-c07dd4caea3c.zip"
+            "Fn::Sub": "${CodePrefix}walkInRegistration-20fb1a58a445.zip"
           }
         },
         "Environment": {
@@ -760,7 +760,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}printBadge-e5f0c8bf7b4e.zip"
+            "Fn::Sub": "${CodePrefix}printBadge-c35ae26da0fe.zip"
           }
         },
         "Environment": {
@@ -809,7 +809,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}getAuditLog-4ca407ec14fb.zip"
+            "Fn::Sub": "${CodePrefix}getAuditLog-de2b6f6586ab.zip"
           }
         },
         "Environment": {
@@ -934,7 +934,7 @@
             "Ref": "CodeBucket"
           },
           "S3Key": {
-            "Fn::Sub": "${CodePrefix}sendConfirmationEmail-6387446a9a4a.zip"
+            "Fn::Sub": "${CodePrefix}sendConfirmationEmail-db7a63b87203.zip"
           }
         },
         "Environment": {
