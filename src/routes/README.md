@@ -36,6 +36,6 @@ the real rules regardless of what the UI shows.
 
 - Dynamic segments are bare `$` (`$id`, `$reg`), never `{id}`.
 - `_authenticated.tsx` is a **pathless layout**: children render under its
-  guard + shell without their URL gaining a prefix beyond the underscore rule.
+  guard + shell without their URL gaining a prefix beyond the leading `_`.
 - Data fetching goes through `src/lib/api-client.ts` + TanStack Query, never
   ad-hoc `fetch`.
